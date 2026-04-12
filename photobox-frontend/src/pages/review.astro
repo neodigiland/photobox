@@ -1,0 +1,182 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Review Photos" hideOverflow={false}>
+    <div class="min-h-screen w-full flex flex-col items-center justify-start pt-6 pb-12 relative select-none">
+
+        <div class="text-center mb-6 z-10 mt-4">
+            <h1 class="text-4xl font-bold mb-2">Review Your Print</h1>
+            <p class="text-lg text-zinc-400">This is exactly what will be printed</p>
+        </div>
+
+        <!-- Print Preview Container -->
+        <div class="flex items-start justify-center gap-8 w-full max-w-5xl z-10 px-6 flex-wrap" id="preview-area">
+            
+            <!-- Left: Final rendered strip -->
+            <div class="flex flex-col items-center flex-shrink-0">
+                <div class="bg-zinc-900 rounded-2xl p-5 border border-zinc-800 shadow-[0_0_40px_rgba(0,0,0,0.5)]">
+                    <div id="loading-preview" class="flex flex-col items-center gap-4 py-16 px-12 text-zinc-400">
+                        <svg class="animate-spin h-10 w-10" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <p class="font-medium">Rendering preview...</p>
+                    </div>
+                    <canvas id="print-canvas" class="hidden rounded-lg shadow-xl"></canvas>
+                </div>
+                <div class="mt-2 flex items-center gap-2">
+                    <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                    <span class="text-xs text-zinc-500">Print-ready preview</span>
+                </div>
+            </div>
+
+            <!-- Right: Info + Thumbnails + Actions -->
+            <div class="flex flex-col gap-4 w-72 flex-shrink-0">
+                <div class="bg-zinc-900 rounded-xl border border-zinc-800 p-5">
+                    <h3 class="font-bold text-lg mb-3 text-zinc-300">Session Info</h3>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex justify-between">
+                            <span class="text-zinc-500">Package</span>
+                            <span class="font-medium" id="info-package">—</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-zinc-500">Frame</span>
+                            <span class="font-medium" id="info-frame">—</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-zinc-500">Photos</span>
+                            <span class="font-medium" id="info-photos">—</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-zinc-900 rounded-xl border border-zinc-800 p-5">
+                    <h3 class="font-bold text-sm mb-3 text-zinc-300">Your Shots</h3>
+                    <div class="grid grid-cols-3 gap-2" id="thumb-grid"></div>
+                </div>
+
+                <button id="print-btn" class="w-full px-6 py-4 bg-gradient-to-r from-purple-600 to-fuchsia-600 text-white font-bold text-lg rounded-xl transition-all duration-200 flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-95 shadow-[0_0_30px_rgba(168,85,247,0.3)]">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0l.229 2.523a1.125 1.125 0 01-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0021 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 00-1.913-.247M6.34 18H5.25A2.25 2.25 0 013 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 011.913-.247m10.5 0a48.536 48.536 0 00-10.5 0m10.5 0V3.375c0-.621-.504-1.125-1.125-1.125h-8.25c-.621 0-1.125.504-1.125 1.125v3.659M18 10.5h.008v.008H18V10.5zm-3 0h.008v.008H15V10.5z" />
+                    </svg>
+                    Print This! 🖨️
+                </button>
+                <button id="retake-btn" class="w-full px-6 py-3 bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-sm rounded-xl transition-all duration-200 border border-zinc-700 flex items-center justify-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182" />
+                    </svg>
+                    Retake Photos
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/strip-renderer.js" is:inline></script>
+    <script is:inline>
+        const BACKEND_URL = 'http://localhost:3000';
+        const selectedPackage = localStorage.getItem('selectedPackage') || 'basic';
+        const selectedFrameId = localStorage.getItem('selectedFrame') || 'clean-white';
+        const photos = JSON.parse(localStorage.getItem('capturedPhotos') || '[]');
+
+        document.getElementById('info-package').innerText = selectedPackage === 'premium' ? 'Premium Grid' : 'Classic Strip';
+        document.getElementById('info-photos').innerText = `${photos.length} photos`;
+
+        const thumbGrid = document.getElementById('thumb-grid');
+        photos.forEach((photo, i) => {
+            const div = document.createElement('div');
+            div.className = 'aspect-[4/3] rounded-lg overflow-hidden bg-zinc-800';
+            if (photo && photo.startsWith('data:')) {
+                div.innerHTML = `<img src="${photo}" class="w-full h-full object-cover" alt="Photo ${i+1}" />`;
+            } else {
+                div.innerHTML = `<div class="w-full h-full flex items-center justify-center text-zinc-500 text-xs font-bold">${i+1}</div>`;
+            }
+            thumbGrid.appendChild(div);
+        });
+
+        async function renderPreview() {
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/frames/${selectedFrameId}`);
+                const frame = await res.json();
+                document.getElementById('info-frame').innerText = frame.name;
+
+                const canvas = document.getElementById('print-canvas');
+                await StripRenderer.render(canvas, photos, frame, selectedPackage);
+
+                // Scale canvas to fit screen — max height ~500px
+                const originalW = parseInt(canvas.style.width);
+                const originalH = parseInt(canvas.style.height);
+                const maxH = 500;
+                if (originalH > maxH) {
+                    const scale = maxH / originalH;
+                    canvas.style.width = Math.round(originalW * scale) + 'px';
+                    canvas.style.height = Math.round(originalH * scale) + 'px';
+                }
+
+                document.getElementById('loading-preview').classList.add('hidden');
+                canvas.classList.remove('hidden');
+            } catch (err) {
+                console.error('Failed to render preview:', err);
+                document.getElementById('loading-preview').innerHTML = `
+                    <p class="text-red-400">Failed to load frame data</p>
+                    <a href="/select-frame" class="text-purple-400 underline text-sm mt-2">Go back</a>
+                `;
+            }
+        }
+
+        document.getElementById('retake-btn').addEventListener('click', () => {
+            window.PhotoboxSound.beep(440, 0.1, 0.15);
+            localStorage.removeItem('capturedPhotos');
+            window.location.href = '/camera';
+        });
+
+        document.getElementById('print-btn').addEventListener('click', async () => {
+            const btn = document.getElementById('print-btn');
+            btn.disabled = true;
+            btn.innerHTML = `
+                <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Uploading photos...
+            `;
+            btn.classList.add('opacity-75');
+
+            window.PhotoboxSound.beep(880, 0.15, 0.25);
+
+            try {
+                // Get full-resolution strip from canvas (before scaling)
+                const canvas = document.getElementById('print-canvas');
+                const stripDataUrl = canvas.toDataURL('image/png', 1.0);
+
+                // Upload to gallery
+                const res = await fetch(`${BACKEND_URL}/api/gallery`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        photos: photos,
+                        strip: stripDataUrl,
+                        frameId: selectedFrameId,
+                        packageType: selectedPackage
+                    })
+                });
+                const data = await res.json();
+
+                // Store gallery info for finish page
+                localStorage.setItem('galleryId', data.galleryId);
+                localStorage.setItem('galleryQR', data.qrDataUrl);
+                localStorage.setItem('galleryURL', data.downloadUrl);
+            } catch (err) {
+                console.warn('Gallery upload failed (photos still print):', err);
+            }
+
+            window.location.href = '/printing';
+        });
+
+        if (photos.length === 0) {
+            window.location.href = '/camera';
+        } else {
+            renderPreview();
+        }
+    </script>
+</Layout>

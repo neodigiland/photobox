@@ -1,0 +1,88 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Welcome">
+    <!-- Secret Admin Access -->
+    <div id="secret-admin" class="absolute top-0 left-0 w-[100px] h-[100px] z-50"></div>
+
+    <div class="h-full w-full flex flex-col items-center justify-center cursor-pointer select-none" id="start-screen">
+        <!-- Animated Background Orbs -->
+        <div class="absolute inset-0 overflow-hidden pointer-events-none">
+            <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-600/20 rounded-full blur-[120px] animate-pulse"></div>
+            <div class="absolute bottom-1/4 right-1/4 w-80 h-80 bg-fuchsia-600/15 rounded-full blur-[100px] animate-pulse" style="animation-delay: 1s;"></div>
+            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[150px] animate-pulse" style="animation-delay: 2s;"></div>
+        </div>
+
+        <!-- Visual Element -->
+        <div class="relative w-56 h-56 mb-14 z-10">
+            <div class="absolute inset-0 bg-purple-500/20 rounded-full animate-ping" style="animation-duration: 3s;"></div>
+            <div class="absolute inset-4 bg-fuchsia-500/30 rounded-full animate-pulse"></div>
+            <div class="absolute inset-8 bg-gradient-to-tr from-purple-600 to-fuchsia-600 rounded-3xl shadow-[0_0_60px_rgba(168,85,247,0.4)] flex items-center justify-center border border-white/20">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-20 w-20 text-white drop-shadow-lg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z" />
+                </svg>
+            </div>
+        </div>
+
+        <h1 class="text-7xl font-black tracking-tight mb-4 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-fuchsia-400 z-10">
+            Photobox Studio
+        </h1>
+
+        <p class="text-2xl text-zinc-400 mb-20 max-w-lg text-center font-light z-10">
+            Capture your best moments with high-quality prints
+        </p>
+
+        <button id="start-btn" class="group relative px-14 py-6 bg-white text-zinc-950 font-bold text-2xl rounded-full overflow-hidden transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-[0_0_40px_rgba(255,255,255,0.2)] z-10">
+            <div class="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/50 to-transparent -translate-x-full animate-[shimmer_2.5s_infinite]"></div>
+            <span class="relative flex items-center gap-3">
+                Tap to Start
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                </svg>
+            </span>
+        </button>
+
+        <!-- Version tag -->
+        <div class="absolute bottom-6 text-zinc-700 text-sm font-mono z-10">v2.0 • Kiosk Mode</div>
+    </div>
+
+    <script is:inline>
+        document.getElementById('start-btn').addEventListener('click', () => {
+            window.PhotoboxSound.beep(880, 0.1, 0.2);
+            window.location.href = '/select-package';
+        });
+
+        // Secret Admin Logic
+        let tapCount = 0;
+        let tapTimer = null;
+        document.getElementById('secret-admin').addEventListener('click', (e) => {
+            e.stopPropagation();
+            tapCount++;
+            
+            if (!tapTimer) {
+                tapTimer = setTimeout(() => {
+                    tapCount = 0;
+                    tapTimer = null;
+                }, 3000);
+            }
+            
+            if (tapCount >= 5) {
+                clearTimeout(tapTimer);
+                tapCount = 0;
+                tapTimer = null;
+                const pin = prompt('Enter Admin PIN:');
+                if (pin === '1234') {
+                    window.location.href = '/admin';
+                }
+            }
+        });
+    </script>
+</Layout>
+
+<style>
+@keyframes shimmer {
+    100% { transform: translateX(100%); }
+}
+</style>

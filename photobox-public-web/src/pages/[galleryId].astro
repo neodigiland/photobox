@@ -1,0 +1,100 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { supabase } from '../utils/supabase';
+
+// Explicit opt-in for SSR
+export const prerender = false;
+
+const { galleryId } = Astro.params;
+let imageUrl = null;
+let error = null;
+
+try {
+    // Generate public URL directly from Supabase Storage
+    const { data } = supabase.storage
+        .from('photobox-galleries')
+        .getPublicUrl(`${galleryId}/strip.jpg`); // In prod we might handle PNG if uploaded
+        
+    if (data && data.publicUrl) {
+        // Appending a cache buster dynamically to force fresh load if recently uploaded
+        imageUrl = `${data.publicUrl}?t=${Date.now()}`;
+    }
+} catch (err) {
+    console.error("Fetch error:", err);
+    error = "Could not load gallery";
+}
+---
+
+<Layout 
+    title={`Photobox Gallery - ${galleryId}`}
+    description="Your photo strip is ready! Download and share with friends."
+    image={imageUrl || undefined}
+>
+    <main class="w-full min-h-screen flex flex-col items-center justify-center p-6 relative overflow-hidden">
+        
+        <!-- Ambient BG -->
+        <div class="fixed inset-0 pointer-events-none -z-10">
+            <div class="absolute top-0 right-0 w-96 h-96 bg-purple-600/10 rounded-full blur-[100px]"></div>
+            <div class="absolute bottom-0 left-0 w-96 h-96 bg-fuchsia-600/10 rounded-full blur-[100px]"></div>
+        </div>
+
+        {error || (!imageUrl) ? (
+            <div class="text-center z-10">
+                <h1 class="text-2xl font-bold mb-2 text-white">Gallery Not Found</h1>
+                <p class="text-zinc-400">Please check the link and try again.</p>
+            </div>
+        ) : (
+            <div class="w-full max-w-md flex flex-col items-center z-10">
+                
+                <h1 class="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-fuchsia-400 mb-8 tracking-tight">
+                    Your Memories ✨
+                </h1>
+
+                <!-- Glassmorphic Photo Container -->
+                <div class="bg-white/5 border border-white/10 rounded-3xl p-4 backdrop-blur-md shadow-2xl mb-8 w-full tilt-card relative overflow-hidden">
+                    <div class="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none"></div>
+                    <img 
+                        src={imageUrl} 
+                        alt="Photo Strip" 
+                        class="w-full rounded-2xl shadow-inner border border-white/10 select-none pointer-events-none"
+                    />
+                </div>
+
+                <!-- Actions -->
+                <div class="w-full space-y-4">
+                    <!-- High Res Download - using direct Supabase URL + download attr -->
+                    <a 
+                        href={imageUrl} 
+                        download={`photobox-${galleryId}.jpg`}
+                        target="_blank"
+                        class="block w-full text-center py-4 px-6 bg-white text-zinc-950 rounded-2xl font-bold text-lg hover:scale-[1.02] active:scale-[0.98] transition-all shadow-[0_0_30px_rgba(255,255,255,0.2)] hover:shadow-[0_0_40px_rgba(255,255,255,0.3)]"
+                    >
+                        Download High-Res 💾
+                    </a>
+                    
+                    <button class="w-full py-4 px-6 bg-zinc-800/40 hover:bg-zinc-800 border border-zinc-700/50 hover:border-zinc-500 rounded-2xl font-semibold text-zinc-300 transition-all flex justify-center items-center gap-2 backdrop-blur-sm">
+                        <!-- IG Icon -->
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-instagram"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>
+                        Share to IG Story
+                    </button>
+                </div>
+                
+                <div class="mt-12 text-center text-zinc-600 text-sm font-medium">
+                    <p>Photobox Studio &copy; {new Date().getFullYear()}</p>
+                </div>
+            </div>
+        )}
+    </main>
+</Layout>
+
+<style>
+/* Smooth entrance animation */
+main > div {
+    animation: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+</style>

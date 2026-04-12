@@ -1,0 +1,571 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Admin Dashboard" hideOverflow={false}>
+    <div class="w-full max-w-7xl mx-auto py-6 px-4 !items-start !justify-start">
+        
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-8 w-full">
+            <div>
+                <h1 class="text-4xl font-bold">Admin Dashboard</h1>
+                <p class="text-zinc-400 mt-1">Photobox System Monitor & Management</p>
+            </div>
+            <div class="flex gap-3">
+                <button id="refresh-btn" class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-xl border border-zinc-700 font-medium flex items-center gap-2 transition-colors text-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182" />
+                    </svg>
+                    Refresh
+                </button>
+                <a href="/" class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-xl border border-zinc-700 font-medium flex items-center gap-2 transition-colors text-sm">
+                    ← Back to Kiosk
+                </a>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════
+             SECTION 1: Stats Cards
+             ═══════════════════════════════════════════════════════ -->
+        <div class="grid grid-cols-5 gap-4 mb-8 w-full">
+            <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
+                <p class="text-zinc-500 text-xs font-medium mb-1 uppercase tracking-wider">Total Sessions</p>
+                <p class="text-3xl font-bold" id="stat-sessions">—</p>
+            </div>
+            <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
+                <p class="text-zinc-500 text-xs font-medium mb-1 uppercase tracking-wider">Revenue</p>
+                <p class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-400" id="stat-revenue">—</p>
+            </div>
+            <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
+                <p class="text-zinc-500 text-xs font-medium mb-1 uppercase tracking-wider">Basic / Premium</p>
+                <p class="text-3xl font-bold" id="stat-packages">—</p>
+            </div>
+            <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
+                <p class="text-zinc-500 text-xs font-medium mb-1 uppercase tracking-wider">Active Pending</p>
+                <p class="text-3xl font-bold text-amber-400" id="stat-pending">—</p>
+            </div>
+            <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
+                <p class="text-zinc-500 text-xs font-medium mb-1 uppercase tracking-wider">Total Frames</p>
+                <p class="text-3xl font-bold text-purple-400" id="stat-frames">—</p>
+            </div>
+        </div>
+
+        <!-- Two-column layout -->
+        <div class="grid grid-cols-3 gap-6 w-full mb-8">
+            
+            <!-- ═══════════════════════════════════════════════════
+                 LEFT COL: Quick Actions + Transactions
+                 ═══════════════════════════════════════════════════ -->
+            <div class="col-span-2 flex flex-col gap-6">
+                
+                <!-- Quick Actions -->
+                <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
+                    <h2 class="text-lg font-bold mb-4 flex items-center gap-2">🔧 Quick Actions</h2>
+                    <div class="flex gap-3 items-center flex-wrap">
+                        <input type="text" id="sim-tx-id" placeholder="Transaction ID (TX-...)" class="px-4 py-2 bg-zinc-950 border border-zinc-700 rounded-xl text-sm font-mono flex-1 min-w-[280px] focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500/30" />
+                        <button id="sim-pay-btn" class="px-4 py-2 bg-green-600 hover:bg-green-500 rounded-xl font-bold text-sm transition-colors whitespace-nowrap">
+                            ✅ Simulate Pay
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Recent Transactions -->
+                <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
+                    <h2 class="text-lg font-bold mb-4 flex items-center gap-2">📋 Recent Transactions</h2>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="text-zinc-500 border-b border-zinc-800">
+                                    <th class="text-left py-3 px-3 font-medium text-xs uppercase tracking-wider">Transaction ID</th>
+                                    <th class="text-left py-3 px-3 font-medium text-xs uppercase tracking-wider">Package</th>
+                                    <th class="text-left py-3 px-3 font-medium text-xs uppercase tracking-wider">Amount</th>
+                                    <th class="text-left py-3 px-3 font-medium text-xs uppercase tracking-wider">Status</th>
+                                    <th class="text-left py-3 px-3 font-medium text-xs uppercase tracking-wider">Created</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tx-table-body">
+                                <tr><td colspan="5" class="py-8 text-center text-zinc-500">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ═══════════════════════════════════════════════════
+                 RIGHT COL: System Status
+                 ═══════════════════════════════════════════════════ -->
+            <div class="flex flex-col gap-6">
+                <!-- System Status -->
+                <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
+                    <h2 class="text-lg font-bold mb-4 flex items-center gap-2">🖥️ System Status</h2>
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-zinc-400 text-sm">Backend</span>
+                            <div class="flex items-center gap-2">
+                                <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                                <span class="text-sm text-green-400 font-medium">Online</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-zinc-400 text-sm">Frontend</span>
+                            <div class="flex items-center gap-2">
+                                <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                                <span class="text-sm text-green-400 font-medium">Online</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-zinc-400 text-sm">WebSocket</span>
+                            <div class="flex items-center gap-2">
+                                <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                                <span class="text-sm text-green-400 font-medium">Connected</span>
+                            </div>
+                        </div>
+                        <hr class="border-zinc-800" />
+                        <div class="flex items-center justify-between">
+                            <span class="text-zinc-400 text-sm">Camera</span>
+                            <span class="text-sm text-zinc-500 font-mono">MOCK</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-zinc-400 text-sm">Printer</span>
+                            <span class="text-sm text-zinc-500 font-mono">MOCK</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-zinc-400 text-sm">Payment</span>
+                            <span class="text-sm text-zinc-500 font-mono">MOCK QRIS</span>
+                        </div>
+                        <hr class="border-zinc-800" />
+                        <div class="flex items-center justify-between">
+                            <span class="text-zinc-400 text-sm">Session Uptime</span>
+                            <span class="text-sm text-zinc-300 font-mono" id="uptime">0m 0s</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-zinc-400 text-sm">Version</span>
+                            <span class="text-sm text-zinc-300 font-mono">v3.0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Revenue Chart (simple bars) -->
+                <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
+                    <h2 class="text-lg font-bold mb-4 flex items-center gap-2">📊 Revenue Today</h2>
+                    <canvas id="revenue-chart" class="w-full" height="120"></canvas>
+                    <p class="text-xs text-zinc-500 mt-2 text-center" id="chart-label">No data yet</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════
+             SECTION 2: Frame Management
+             ═══════════════════════════════════════════════════════ -->
+        <div class="w-full mb-8">
+            <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-xl font-bold flex items-center gap-2">🖼️ Frame Management</h2>
+                    <button id="add-frame-btn" class="px-4 py-2 bg-purple-600 hover:bg-purple-500 rounded-xl font-bold text-sm transition-colors flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                        </svg>
+                        Add Custom Frame
+                    </button>
+                </div>
+
+                <!-- Frame List -->
+                <div class="grid grid-cols-4 gap-4" id="frame-list">
+                    <p class="text-zinc-500 col-span-4 text-center py-8">Loading frames...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════
+             MODAL: Add/Edit Frame
+             ═══════════════════════════════════════════════════════ -->
+        <div id="frame-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-8">
+            <div class="bg-zinc-900 border border-zinc-700 rounded-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto shadow-2xl">
+                <div class="p-6 border-b border-zinc-800 flex justify-between items-center sticky top-0 bg-zinc-900 rounded-t-2xl z-10">
+                    <h3 class="text-xl font-bold" id="modal-title">Add Custom Frame</h3>
+                    <button id="close-modal" class="w-8 h-8 rounded-lg bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center transition-colors">✕</button>
+                </div>
+                <div class="p-6 grid grid-cols-2 gap-6">
+                    <!-- Left: Form -->
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-zinc-400 mb-1">Frame Name *</label>
+                            <input type="text" id="f-name" placeholder="e.g. Galaxy Night" class="w-full px-3 py-2 bg-zinc-950 border border-zinc-700 rounded-xl text-sm focus:border-purple-500 focus:outline-none" />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-zinc-400 mb-1">Subtitle</label>
+                            <input type="text" id="f-subtitle" placeholder="e.g. Dark & Moody" class="w-full px-3 py-2 bg-zinc-950 border border-zinc-700 rounded-xl text-sm focus:border-purple-500 focus:outline-none" />
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-sm font-medium text-zinc-400 mb-1">Background Color</label>
+                                <div class="flex gap-2 items-center">
+                                    <input type="color" id="f-bgColor" value="#ffffff" class="w-10 h-10 rounded-lg bg-transparent cursor-pointer border border-zinc-700" />
+                                    <input type="text" id="f-bgColor-text" value="#ffffff" class="flex-1 px-2 py-2 bg-zinc-950 border border-zinc-700 rounded-lg text-xs font-mono focus:border-purple-500 focus:outline-none" />
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-zinc-400 mb-1">Photo Border Color</label>
+                                <div class="flex gap-2 items-center">
+                                    <input type="color" id="f-photoBorder" value="#e0e0e0" class="w-10 h-10 rounded-lg bg-transparent cursor-pointer border border-zinc-700" />
+                                    <input type="text" id="f-photoBorder-text" value="#e0e0e0" class="flex-1 px-2 py-2 bg-zinc-950 border border-zinc-700 rounded-lg text-xs font-mono focus:border-purple-500 focus:outline-none" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-sm font-medium text-zinc-400 mb-1">Text Color</label>
+                                <div class="flex gap-2 items-center">
+                                    <input type="color" id="f-textColor" value="#333333" class="w-10 h-10 rounded-lg bg-transparent cursor-pointer border border-zinc-700" />
+                                    <input type="text" id="f-textColor-text" value="#333333" class="flex-1 px-2 py-2 bg-zinc-950 border border-zinc-700 rounded-lg text-xs font-mono focus:border-purple-500 focus:outline-none" />
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-zinc-400 mb-1">Accent Color</label>
+                                <div class="flex gap-2 items-center">
+                                    <input type="color" id="f-accentColor" value="#a855f7" class="w-10 h-10 rounded-lg bg-transparent cursor-pointer border border-zinc-700" />
+                                    <input type="text" id="f-accentColor-text" value="#a855f7" class="flex-1 px-2 py-2 bg-zinc-950 border border-zinc-700 rounded-lg text-xs font-mono focus:border-purple-500 focus:outline-none" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-sm font-medium text-zinc-400 mb-1">Border Width</label>
+                                <input type="range" id="f-borderWidth" min="0" max="6" value="2" class="w-full accent-purple-500" />
+                                <span class="text-xs text-zinc-500" id="f-borderWidth-val">2px</span>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-zinc-400 mb-1">Photo Radius</label>
+                                <input type="range" id="f-photoRadius" min="0" max="20" value="4" class="w-full accent-purple-500" />
+                                <span class="text-xs text-zinc-500" id="f-photoRadius-val">4px</span>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-zinc-400 mb-1">Footer Text</label>
+                            <input type="text" id="f-footerText" value="Photobox Studio" class="w-full px-3 py-2 bg-zinc-950 border border-zinc-700 rounded-xl text-sm focus:border-purple-500 focus:outline-none" />
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-sm font-medium text-zinc-400 mb-1">Photo Filter</label>
+                                <select id="f-filter" class="w-full px-3 py-2 bg-zinc-950 border border-zinc-700 rounded-xl text-sm focus:border-purple-500 focus:outline-none">
+                                    <option value="none">None</option>
+                                    <option value="sepia">Sepia (Vintage)</option>
+                                    <option value="grayscale">Black & White</option>
+                                    <option value="high-contrast">High Contrast</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-zinc-400 mb-1">Decorations</label>
+                                <select id="f-decorations" class="w-full px-3 py-2 bg-zinc-950 border border-zinc-700 rounded-xl text-sm focus:border-purple-500 focus:outline-none">
+                                    <option value="none">None</option>
+                                    <option value="film-sprockets">Film Sprockets</option>
+                                    <option value="neon-border">Neon Border</option>
+                                    <option value="flowers">Flowers</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right: Live Preview -->
+                    <div class="flex flex-col items-center">
+                        <p class="text-sm text-zinc-400 mb-3 font-medium">Live Preview</p>
+                        <div class="bg-zinc-950 rounded-xl p-4 border border-zinc-800 flex items-center justify-center">
+                            <canvas id="modal-preview-canvas" class="rounded-lg" style="max-height: 400px;"></canvas>
+                        </div>
+                        <button id="preview-update-btn" class="mt-3 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-xl text-sm font-medium transition-colors border border-zinc-700 flex items-center gap-2">
+                            🔄 Update Preview
+                        </button>
+                    </div>
+                </div>
+                <div class="p-6 border-t border-zinc-800 flex justify-end gap-3">
+                    <button id="cancel-modal" class="px-6 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-xl font-medium transition-colors border border-zinc-700">Cancel</button>
+                    <button id="save-frame-btn" class="px-6 py-2 bg-gradient-to-r from-purple-600 to-fuchsia-600 text-white rounded-xl font-bold transition-colors hover:opacity-90">Save Frame</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="/js/strip-renderer.js" is:inline></script>
+    <script is:inline>
+        const BACKEND_URL = 'http://localhost:3000';
+        const startTime = Date.now();
+
+        // ─── Utilities ───────────────────────────────────────────
+        function formatCurrency(n) {
+            return 'Rp ' + n.toLocaleString('id-ID');
+        }
+        function formatTime(ts) {
+            return new Date(ts).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        }
+        function statusBadge(status) {
+            const styles = {
+                PENDING: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
+                PAID: 'bg-green-500/20 text-green-400 border-green-500/30',
+                EXPIRED: 'bg-red-500/20 text-red-400 border-red-500/30'
+            };
+            const s = styles[status] || 'bg-zinc-700 text-zinc-400 border-zinc-600';
+            return `<span class="px-3 py-1 rounded-full text-xs font-bold border ${s}">${status}</span>`;
+        }
+
+        // ─── Load Stats ──────────────────────────────────────────
+        async function loadStats() {
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/admin/stats`);
+                const data = await res.json();
+
+                document.getElementById('stat-sessions').innerText = data.totalSessions;
+                document.getElementById('stat-revenue').innerText = formatCurrency(data.totalRevenue);
+                document.getElementById('stat-packages').innerText = `${data.packageCounts.basic || 0} / ${data.packageCounts.premium || 0}`;
+                document.getElementById('stat-pending').innerText = data.activePending;
+                document.getElementById('stat-frames').innerText = `${data.totalFrames} (${data.customFrames} custom)`;
+
+                // Transaction Table
+                const tbody = document.getElementById('tx-table-body');
+                if (data.recentTransactions.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" class="py-8 text-center text-zinc-500">No transactions yet</td></tr>';
+                } else {
+                    tbody.innerHTML = data.recentTransactions.map(tx => `
+                        <tr class="border-b border-zinc-800/50 hover:bg-zinc-800/30 transition-colors">
+                            <td class="py-2.5 px-3 font-mono text-xs">${tx.id}</td>
+                            <td class="py-2.5 px-3 capitalize text-sm">${tx.package}</td>
+                            <td class="py-2.5 px-3 font-medium text-sm">${formatCurrency(tx.amount)}</td>
+                            <td class="py-2.5 px-3">${statusBadge(tx.status)}</td>
+                            <td class="py-2.5 px-3 text-zinc-400 text-sm">${formatTime(tx.createdAt)}</td>
+                        </tr>
+                    `).join('');
+                }
+
+                // Revenue Chart
+                drawRevenueChart(data);
+
+            } catch (err) {
+                console.error('Stats load failed:', err);
+            }
+        }
+
+        function drawRevenueChart(data) {
+            const canvas = document.getElementById('revenue-chart');
+            const ctx = canvas.getContext('2d');
+            const dpr = window.devicePixelRatio || 1;
+            const W = canvas.clientWidth;
+            const H = 120;
+            canvas.width = W * dpr;
+            canvas.height = H * dpr;
+            ctx.scale(dpr, dpr);
+            ctx.clearRect(0, 0, W, H);
+
+            if (!data.dailyHistory || data.dailyHistory.length === 0) {
+                document.getElementById('chart-label').innerText = 'No revenue data yet';
+                return;
+            }
+
+            const maxRevenue = Math.max(...data.dailyHistory.map(d => d.revenue), 1);
+            const barW = Math.min(40, (W - 20) / data.dailyHistory.length - 5);
+
+            data.dailyHistory.slice(-7).forEach((day, i) => {
+                const x = 10 + i * (barW + 8);
+                const barH = (day.revenue / maxRevenue) * (H - 30);
+                const y = H - barH - 20;
+
+                // Bar
+                const grad = ctx.createLinearGradient(x, y, x, H - 20);
+                grad.addColorStop(0, '#a855f7');
+                grad.addColorStop(1, '#7c3aed');
+                ctx.fillStyle = grad;
+                ctx.beginPath();
+                ctx.roundRect(x, y, barW, barH, 4);
+                ctx.fill();
+
+                // Label
+                ctx.fillStyle = '#71717a';
+                ctx.font = '10px Outfit';
+                ctx.textAlign = 'center';
+                ctx.fillText(day.date.split('-')[2], x + barW / 2, H - 6);
+            });
+
+            document.getElementById('chart-label').innerText =
+                `${data.dailyHistory.length} day(s) tracked • Total: ${formatCurrency(data.totalRevenue)}`;
+        }
+
+        // ─── Simulate Payment ────────────────────────────────────
+        document.getElementById('sim-pay-btn').addEventListener('click', async () => {
+            const txId = document.getElementById('sim-tx-id').value.trim();
+            if (!txId) return alert('Enter a transaction ID');
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/simulate-payment-success`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ transactionId: txId })
+                });
+                const data = await res.json();
+                alert(data.message || data.error);
+                loadStats();
+            } catch (err) { alert('Failed: ' + err.message); }
+        });
+
+        // ─── Frame Management ────────────────────────────────────
+        async function loadFrames() {
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/frames`);
+                const frames = await res.json();
+                renderFrameList(frames);
+            } catch (err) {
+                document.getElementById('frame-list').innerHTML = '<p class="text-red-400 col-span-4 text-center py-8">Failed to load frames</p>';
+            }
+        }
+
+        async function renderFrameList(frames) {
+            const grid = document.getElementById('frame-list');
+            grid.innerHTML = '';
+
+            for (const frame of frames) {
+                const card = document.createElement('div');
+                card.className = 'bg-zinc-950 border border-zinc-800 rounded-xl p-4 flex flex-col items-center';
+
+                card.innerHTML = `
+                    <canvas class="rounded-lg mb-3 w-full" data-fcanvas></canvas>
+                    <div class="w-full">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="font-bold text-sm">${frame.name}</span>
+                            ${frame.isDefault
+                                ? '<span class="text-[10px] bg-zinc-800 px-2 py-0.5 rounded-full text-zinc-400">DEFAULT</span>'
+                                : '<span class="text-[10px] bg-purple-500/20 px-2 py-0.5 rounded-full text-purple-400 font-bold">CUSTOM</span>'}
+                        </div>
+                        <p class="text-xs text-zinc-500 mb-3">${frame.subtitle} • ${frame.filter !== 'none' ? frame.filter : 'no filter'} • ${frame.decorations !== 'none' ? frame.decorations : 'no deco'}</p>
+                        <div class="flex gap-2">
+                            <div class="w-5 h-5 rounded border border-zinc-700" style="background:${frame.bgColor}" title="BG"></div>
+                            <div class="w-5 h-5 rounded border border-zinc-700" style="background:${frame.photoBorder}" title="Border"></div>
+                            <div class="w-5 h-5 rounded border border-zinc-700" style="background:${frame.accentColor}" title="Accent"></div>
+                            <div class="flex-1"></div>
+                            ${!frame.isDefault ? `<button class="text-xs text-red-400 hover:text-red-300 transition-colors font-medium" onclick="deleteFrameAction('${frame.id}')">Delete</button>` : ''}
+                        </div>
+                    </div>
+                `;
+
+                grid.appendChild(card);
+
+                // Render preview
+                const canvas = card.querySelector('[data-fcanvas]');
+                const placeholders = [null, null, null];
+                await StripRenderer.render(canvas, placeholders, frame, 'basic');
+            }
+        }
+
+        async function deleteFrameAction(frameId) {
+            if (!confirm('Delete this custom frame?')) return;
+            try {
+                await fetch(`${BACKEND_URL}/api/admin/frames/${frameId}`, { method: 'DELETE' });
+                loadFrames();
+                loadStats();
+            } catch (err) { alert('Failed: ' + err.message); }
+        }
+        window.deleteFrameAction = deleteFrameAction;
+
+        // ─── Frame Modal ─────────────────────────────────────────
+        const modal = document.getElementById('frame-modal');
+
+        document.getElementById('add-frame-btn').addEventListener('click', () => {
+            modal.classList.remove('hidden');
+            updateModalPreview();
+        });
+        document.getElementById('close-modal').addEventListener('click', () => modal.classList.add('hidden'));
+        document.getElementById('cancel-modal').addEventListener('click', () => modal.classList.add('hidden'));
+
+        // Sync color pickers with text inputs
+        ['bgColor', 'photoBorder', 'textColor', 'accentColor'].forEach(field => {
+            const picker = document.getElementById(`f-${field}`);
+            const text = document.getElementById(`f-${field}-text`);
+            picker.addEventListener('input', () => { text.value = picker.value; updateModalPreview(); });
+            text.addEventListener('input', () => { picker.value = text.value; updateModalPreview(); });
+        });
+
+        // Sync sliders
+        document.getElementById('f-borderWidth').addEventListener('input', (e) => {
+            document.getElementById('f-borderWidth-val').innerText = e.target.value + 'px';
+            updateModalPreview();
+        });
+        document.getElementById('f-photoRadius').addEventListener('input', (e) => {
+            document.getElementById('f-photoRadius-val').innerText = e.target.value + 'px';
+            updateModalPreview();
+        });
+
+        // Other fields trigger preview update
+        ['f-footerText', 'f-filter', 'f-decorations', 'f-name'].forEach(id => {
+            document.getElementById(id).addEventListener('input', updateModalPreview);
+        });
+
+        document.getElementById('preview-update-btn').addEventListener('click', updateModalPreview);
+
+        function getFormData() {
+            return {
+                name: document.getElementById('f-name').value || 'Untitled',
+                subtitle: document.getElementById('f-subtitle').value || 'Custom',
+                bgColor: document.getElementById('f-bgColor').value,
+                photoBorder: document.getElementById('f-photoBorder').value,
+                photoBorderWidth: parseInt(document.getElementById('f-borderWidth').value),
+                photoRadius: parseInt(document.getElementById('f-photoRadius').value),
+                textColor: document.getElementById('f-textColor').value,
+                footerText: document.getElementById('f-footerText').value || 'Photobox Studio',
+                accentColor: document.getElementById('f-accentColor').value,
+                filter: document.getElementById('f-filter').value,
+                decorations: document.getElementById('f-decorations').value
+            };
+        }
+
+        async function updateModalPreview() {
+            const frameData = getFormData();
+            const canvas = document.getElementById('modal-preview-canvas');
+            const placeholders = [null, null, null];
+            await StripRenderer.render(canvas, placeholders, frameData, 'basic');
+        }
+
+        // Save Frame
+        document.getElementById('save-frame-btn').addEventListener('click', async () => {
+            const frameData = getFormData();
+            if (!frameData.name || frameData.name === 'Untitled') {
+                alert('Please enter a frame name');
+                return;
+            }
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/admin/frames`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(frameData)
+                });
+                const data = await res.json();
+                if (data.error) {
+                    alert(data.error);
+                    return;
+                }
+                modal.classList.add('hidden');
+                loadFrames();
+                loadStats();
+                // Reset form
+                document.getElementById('f-name').value = '';
+                document.getElementById('f-subtitle').value = '';
+            } catch (err) { alert('Failed to save: ' + err.message); }
+        });
+
+        // ─── Uptime & Refresh ────────────────────────────────────
+        setInterval(() => {
+            const s = Math.floor((Date.now() - startTime) / 1000);
+            const m = Math.floor(s / 60);
+            document.getElementById('uptime').innerText = `${m}m ${s % 60}s`;
+        }, 1000);
+
+        document.getElementById('refresh-btn').addEventListener('click', () => { loadStats(); loadFrames(); });
+        setInterval(loadStats, 5000);
+
+        // ─── Init ────────────────────────────────────────────────
+        loadStats();
+        loadFrames();
+    </script>
+
+    <style is:global>
+        body {
+            user-select: auto !important;
+            -webkit-user-select: auto !important;
+        }
+    </style>
+</Layout>
