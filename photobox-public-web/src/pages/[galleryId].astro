@@ -13,7 +13,7 @@ try {
     // Generate public URL directly from Supabase Storage
     const { data } = supabase.storage
         .from('photobox-galleries')
-        .getPublicUrl(`${galleryId}/strip.jpg`); // In prod we might handle PNG if uploaded
+        .getPublicUrl(`${galleryId}/strip.png`); // Strip is generated as PNG to preserve HQ rendering
         
     if (data && data.publicUrl) {
         // Appending a cache buster dynamically to force fresh load if recently uploaded
@@ -65,7 +65,7 @@ try {
                     <!-- High Res Download - using direct Supabase URL + download attr -->
                     <a 
                         href={imageUrl} 
-                        download={`photobox-${galleryId}.jpg`}
+                        download={`photobox-${galleryId}.png`}
                         target="_blank"
                         class="block w-full text-center py-4 px-6 bg-white text-zinc-950 rounded-2xl font-bold text-lg hover:scale-[1.02] active:scale-[0.98] transition-all shadow-[0_0_30px_rgba(255,255,255,0.2)] hover:shadow-[0_0_40px_rgba(255,255,255,0.3)]"
                     >
