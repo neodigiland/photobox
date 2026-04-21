@@ -12,34 +12,52 @@ let rawPhotos = [];
 let error = null;
 
 try {
-    // 1. Fetch file list from the folder
-    const { data: files, error: listError } = await supabase.storage
-        .from('photobox-galleries')
-        .list(galleryId);
-        
-    if (listError) throw listError;
-    
-    if (files && files.length > 0) {
-        // We have files! Filter them out.
-        const fileNames = files.map(f => f.name);
-        
-        const getUrl = (filename) => {
-            const { data } = supabase.storage.from('photobox-galleries').getPublicUrl(`${galleryId}/${filename}`);
-            return `${data.publicUrl}?t=${Date.now()}`;
-        };
+    const getBaseUrl = (filename) => {
+        const { data } = supabase.storage.from('photobox-galleries').getPublicUrl(`${galleryId}/${filename}`);
+        return data.publicUrl;
+    };
 
-        if (fileNames.includes('strip.png')) stripUrl = getUrl('strip.png');
-        else if (fileNames.includes('strip.jpg')) stripUrl = getUrl('strip.jpg');
-        
-        if (fileNames.includes('animation.gif')) gifUrl = getUrl('animation.gif');
-        
-        const photoRegex = /^photo-\d+\.jpg$/;
-        rawPhotos = fileNames.filter(f => photoRegex.test(f)).map(f => getUrl(f));
-    } else {
+    const checkExists = async (url) => {
+        try {
+            const res = await fetch(url, { method: 'HEAD' });
+            return res.ok;
+        } catch {
+            return false;
+        }
+    };
+
+    // Prepare URLs to check
+    const candidateStripPng = getBaseUrl('strip.png');
+    const candidateStripJpg = getBaseUrl('strip.jpg');
+    const candidateGif = getBaseUrl('animation.gif');
+    
+    // Check up to 8 photos concurrently
+    const photoCandidates = Array.from({ length: 8 }, (_, i) => getBaseUrl(`photo-${i + 1}.jpg`));
+    
+    const [hasStripPng, hasStripJpg, hasGif, ...photosExist] = await Promise.all([
+        checkExists(candidateStripPng),
+        checkExists(candidateStripJpg),
+        checkExists(candidateGif),
+        ...photoCandidates.map(checkExists)
+    ]);
+
+    const cacheBuster = `?t=${Date.now()}`;
+
+    if (hasStripPng) stripUrl = candidateStripPng + cacheBuster;
+    else if (hasStripJpg) stripUrl = candidateStripJpg + cacheBuster;
+
+    if (hasGif) gifUrl = candidateGif + cacheBuster;
+
+    rawPhotos = photoCandidates
+        .filter((_, i) => photosExist[i])
+        .map(url => url + cacheBuster);
+
+    if (!stripUrl && !gifUrl && rawPhotos.length === 0) {
         error = "Gallery is empty or not found.";
     }
+
 } catch (err) {
-    console.error("Fetch error:", err);
+    console.error("Gallery initialization error:", err);
     error = "Could not load gallery";
 }
 ---
