@@ -75,7 +75,7 @@ import Layout from '../layouts/Layout.astro';
     <script src="/js/strip-renderer.js" is:inline></script>
     
     <script is:inline>
-        const BACKEND_URL = 'http://localhost:3000';
+        const BACKEND_URL = 'http://127.0.0.1:3000';
         const selectedPackage = localStorage.getItem('selectedPackage') || 'basic';
         let selectedFrameId = null;
         let allFrames = [];
@@ -98,7 +98,12 @@ import Layout from '../layouts/Layout.astro';
                      return;
                 }
 
-                for (const frame of packageFrames) {
+                for (let frame of packageFrames) {
+                    // FIX: Ensure overlay URL points to 127.0.0.1 if it was hardcoded as localhost
+                    if (frame.overlay && frame.overlay.includes('localhost:3000')) {
+                        frame.overlay = frame.overlay.replace('localhost:3000', '127.0.0.1:3000');
+                    }
+                    
                     const card = document.createElement('div');
                     card.className = 'frame-thumb';
                     card.onclick = () => selectFrame(frame.id);

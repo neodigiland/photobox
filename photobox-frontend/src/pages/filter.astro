@@ -56,7 +56,7 @@ import Layout from '../layouts/Layout.astro';
     </div>
 
     <script is:inline>
-        const BACKEND_URL = 'http://localhost:3000';
+        const BACKEND_URL = 'http://127.0.0.1:3000';
         const selectedFrameId = localStorage.getItem('selectedFrame') || 'clean-white';
         const originalPhotos = JSON.parse(localStorage.getItem('capturedPhotos') || '[]');
         
@@ -78,21 +78,42 @@ import Layout from '../layouts/Layout.astro';
         }
 
         async function initFilterPage() {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 3000);
+
             try {
-                const res = await fetch(`${BACKEND_URL}/api/frames/${selectedFrameId}`);
+                const res = await fetch(`${BACKEND_URL}/api/frames/${selectedFrameId}`, { signal: controller.signal });
+                clearTimeout(timeoutId);
                 frameData = await res.json();
+                
+                if (frameData.error) {
+                    console.warn('Frame API error on filter page:', frameData.error);
+                    frameData = { name: 'Default', layout: [], overlay: null };
+                }
+
+                // FIX: Ensure overlay URL points to 127.0.0.1 if it was hardcoded as localhost
+                if (frameData.overlay && frameData.overlay.includes('localhost:3000')) {
+                    frameData.overlay = frameData.overlay.replace('localhost:3000', '127.0.0.1:3000');
+                }
+
                 renderPreview();
                 renderFilterList();
                 document.getElementById('next-btn').classList.remove('hidden');
             } catch (err) {
-                console.error('Failed to init preview:', err);
+                clearTimeout(timeoutId);
+                console.error('Failed to init filter page (Backend maybe down):', err);
+                // Fallback so user isn't stuck
+                frameData = { name: 'Default', layout: [], overlay: null };
+                renderPreview();
+                renderFilterList();
+                document.getElementById('next-btn').classList.remove('hidden');
             }
         }
 
         function renderPreview() {
             const container = document.getElementById('preview-container');
             
-            if (frameData.overlay) {
+            if (frameData && frameData.overlay) {
                 container.innerHTML = `
                     <div class="relative w-full h-full overflow-hidden rounded-xl bg-zinc-800">
                         <!-- User Photos (Behind) -->
@@ -100,13 +121,13 @@ import Layout from '../layouts/Layout.astro';
                             ${frameData.layout.map((b, i) => {
                                 const photoIndex = (b.id ? b.id - 1 : i);
                                 if (photoIndex >= originalPhotos.length) return '';
-                                return \`
-                                <div class="absolute overflow-hidden" style="top: \${b.y}%; left: \${b.x}%; width: \${b.w}%; height: \${b.h}%;">
-                                    <div class="w-full h-full" style="transform: rotate(\${b.rotation || 0}deg);">
-                                        <img src="\${originalPhotos[photoIndex]}" class="w-full h-full object-cover shadow-inner filter-preview-img transition-all duration-300" style="filter: \${getFilterCss(activeFilter)}; image-rendering: -webkit-optimize-contrast;" />
+                                return `
+                                <div class="absolute overflow-hidden" style="top: ${b.y}%; left: ${b.x}%; width: ${b.w}%; height: ${b.h}%;">
+                                    <div class="w-full h-full" style="transform: rotate(${b.rotation || 0}deg);">
+                                        <img src="${originalPhotos[photoIndex]}" class="w-full h-full object-cover shadow-inner filter-preview-img transition-all duration-300" style="filter: ${getFilterCss(activeFilter)}; image-rendering: -webkit-optimize-contrast;" />
                                     </div>
                                 </div>
-                                \`;
+                                `;
                             }).join('')}
                         </div>
                         <!-- Transparent Frame (Front) -->
@@ -114,7 +135,19 @@ import Layout from '../layouts/Layout.astro';
                     </div>
                 `;
             } else {
-                container.innerHTML = `<div class="text-white text-center">Legacy frame format detected. Filters apply to photo but preview is limited.</div>`;
+                // FALLBACK: Simple grid preview if frame is missing
+                container.innerHTML = `
+                    <div class="flex flex-col gap-2 w-full h-full p-4 bg-zinc-900 rounded-xl">
+                        <p class="text-[10px] text-zinc-500 text-center mb-1">Preview Simple (Frame tidak ditemukan)</p>
+                        <div class="flex-1 grid grid-cols-1 gap-2">
+                            ${originalPhotos.slice(0, 3).map(p => `
+                                <div class="flex-1 bg-zinc-800 rounded-lg overflow-hidden border border-zinc-700">
+                                    <img src="${p}" class="w-full h-full object-cover filter-preview-img" style="filter: ${getFilterCss(activeFilter)}" />
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
             }
         }
 
@@ -130,15 +163,15 @@ import Layout from '../layouts/Layout.astro';
                 // Just use the first photo as thumbnail
                 const thumbSrc = originalPhotos.length > 0 ? originalPhotos[0] : '';
                 
-                return \`
-                <div onclick="selectFilter('\${f.id}')" class="flex items-center gap-4 p-3 rounded-2xl cursor-pointer transition-all duration-200 border-2 \${isActive ? 'border-purple-500 bg-purple-500/10 scale-[1.02]' : 'border-zinc-800 bg-zinc-900/50 hover:bg-zinc-800'}">
-                    <div class="w-20 h-20 rounded-xl overflow-hidden flex-shrink-0 bg-zinc-800 border \${isActive ? 'border-purple-400' : 'border-zinc-700'}">
-                        <img src="\${thumbSrc}" class="w-full h-full object-cover" style="filter: \${f.css}" />
+                return `
+                <div onclick="selectFilter('${f.id}')" class="flex items-center gap-4 p-3 rounded-2xl cursor-pointer transition-all duration-200 border-2 ${isActive ? 'border-purple-500 bg-purple-500/10 scale-[1.02]' : 'border-zinc-800 bg-zinc-900/50 hover:bg-zinc-800'}">
+                    <div class="w-20 h-20 rounded-xl overflow-hidden flex-shrink-0 bg-zinc-800 border ${isActive ? 'border-purple-400' : 'border-zinc-700'}">
+                        <img src="${thumbSrc}" class="w-full h-full object-cover" style="filter: ${f.css}" />
                     </div>
                     <div class="flex-1">
-                        <h4 class="text-white font-bold text-xl">\${f.name}</h4>
+                        <h4 class="text-white font-bold text-xl">${f.name}</h4>
                     </div>
-                    <div class="\${isActive ? 'opacity-100' : 'opacity-0'} transition-opacity">
+                    <div class="${isActive ? 'opacity-100' : 'opacity-0'} transition-opacity">
                         <div class="w-6 h-6 rounded-full bg-purple-500 flex items-center justify-center shadow-[0_0_10px_#a855f7]">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-white" viewBox="0 0 20 20" fill="currentColor">
                                 <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
@@ -146,7 +179,7 @@ import Layout from '../layouts/Layout.astro';
                         </div>
                     </div>
                 </div>
-                \`;
+                `;
             }).join('');
         }
 
@@ -219,6 +252,10 @@ import Layout from '../layouts/Layout.astro';
             }
         }
 
-        initFilterPage();
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initFilterPage);
+        } else {
+            initFilterPage();
+        }
     </script>
 </Layout>

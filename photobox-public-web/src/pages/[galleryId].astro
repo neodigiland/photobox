@@ -12,14 +12,14 @@ let error = null;
 
 try {
     const getBaseUrl = (filename) => {
-        // Use Vercel Proxy to avoid ISP block on .r2.dev
-        const PROXY_URL = '/r2-assets';
-        return `${PROXY_URL}/${galleryId}/${filename}`;
+        // Using the new custom domain!
+        const R2_URL = 'https://neodigiland.site';
+        return `${R2_URL}/${galleryId}/${filename}`;
     };
 
-    // For SSR validation, we fetch directly from Cloudflare (Vercel can reach it)
+    // SSR validation directly from the new domain
     const checkExists = async (filename) => {
-        const R2_URL = 'https://pub-aa94d8b56e1e432aa439e66b27076fee.r2.dev';
+        const R2_URL = 'https://neodigiland.site';
         try {
             const res = await fetch(`${R2_URL}/${galleryId}/${filename}`, { method: 'HEAD' });
             return res.ok;

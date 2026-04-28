@@ -96,7 +96,7 @@ import Layout from '../layouts/Layout.astro';
     <script src="/js/strip-renderer.js" is:inline></script>
 
     <script is:inline>
-        const BACKEND_URL = 'http://localhost:3000';
+        const BACKEND_URL = 'http://127.0.0.1:3000';
         const selectedPackage = localStorage.getItem('selectedPackage') || 'basic';
         const selectedFrame = localStorage.getItem('selectedFrame') || 'clean-white';
         let totalPhotos = selectedPackage === 'premium' ? 4 : 3;
@@ -122,6 +122,11 @@ import Layout from '../layouts/Layout.astro';
                 const res = await withTimeout(fetch(`${BACKEND_URL}/api/frames/${selectedFrame}`), 3000);
                 frameConfig = await res.json();
                 
+                // FIX: Ensure overlay URL points to 127.0.0.1 if it was hardcoded as localhost
+                if (frameConfig.overlay && frameConfig.overlay.includes('localhost:3000')) {
+                    frameConfig.overlay = frameConfig.overlay.replace('localhost:3000', '127.0.0.1:3000');
+                }
+
                 document.getElementById('frame-name').innerText = frameConfig.name || selectedFrame;
                 
                 // Calculate max photo ID so duplicate blocks don't require extra camera shots

@@ -7,7 +7,7 @@ const R2_SECRET_ACCESS_KEY = process.env.R2_SECRET_ACCESS_KEY;
 const R2_ENDPOINT = `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`;
 
 const BUCKET_NAME = 'photobox-galleries';
-const PUBLIC_DEV_URL = 'https://pub-aa94d8b56e1e432aa439e66b27076fee.r2.dev';
+const PUBLIC_DEV_URL = 'https://neodigiland.site';
 
 // Configure S3 Client for Cloudflare R2
 const S3 = new S3Client({

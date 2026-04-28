@@ -75,7 +75,7 @@ import Layout from '../layouts/Layout.astro';
     <script src="/js/strip-renderer.js" is:inline></script>
     
     <script is:inline>
-        const BACKEND_URL = 'http://localhost:3000';
+        const BACKEND_URL = 'http://127.0.0.1:3000';
         const selectedPackage = localStorage.getItem('selectedPackage') || 'basic';
         const selectedFrameId = localStorage.getItem('selectedFrame') || 'clean-white';
         // Ambil hasil filter, kalau kosong (misal di-bypass) ambil capturedPhotos asli
@@ -91,14 +91,23 @@ import Layout from '../layouts/Layout.astro';
         document.getElementById('info-package').innerText = selectedPackage === 'premium' ? 'Premium (4 Panel)' : 'Classic (3 Panel)';
 
         async function initPreview() {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 3000);
+
             try {
-                const res = await fetch(`${BACKEND_URL}/api/frames/${selectedFrameId}`);
+                const res = await fetch(`${BACKEND_URL}/api/frames/${selectedFrameId}`, { signal: controller.signal });
+                clearTimeout(timeoutId);
                 frameData = await res.json();
                 
                 if (frameData.error) {
                     console.warn('Frame API returned error:', frameData.error);
                     // Fallback to a minimal frame object to prevent crashes
                     frameData = { name: 'Default Frame', bgColor: '#ffffff', textColor: '#333333', photoBorder: '#e0e0e0' };
+                }
+
+                // FIX: Ensure overlay URL points to 127.0.0.1 if it was hardcoded as localhost
+                if (frameData.overlay && frameData.overlay.includes('localhost:3000')) {
+                    frameData.overlay = frameData.overlay.replace('localhost:3000', '127.0.0.1:3000');
                 }
 
                 document.getElementById('info-frame').innerText = frameData.name || 'Custom Frame';
