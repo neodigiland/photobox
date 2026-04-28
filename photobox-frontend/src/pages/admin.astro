@@ -1,571 +1,371 @@
 ---
-import Layout from '../layouts/Layout.astro';
+// Standalone admin panel — no Layout wrapper needed
 ---
 
-<Layout title="Admin Dashboard" hideOverflow={false}>
-    <div class="w-full max-w-7xl mx-auto py-6 px-4 !items-start !justify-start">
-        
-        <!-- Header -->
-        <div class="flex justify-between items-center mb-8 w-full">
-            <div>
-                <h1 class="text-4xl font-bold">Admin Dashboard</h1>
-                <p class="text-zinc-400 mt-1">Photobox System Monitor & Management</p>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel | Photobox Studio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style is:inline>
+        #admin-app {
+            --bg: #09090b; --surface: #18181b; --surface2: #1e1e22; --border: #27272a;
+            --border2: #3f3f46; --text: #fafafa; --text2: #a1a1aa; --text3: #71717a;
+            --accent: #a855f7; --accent2: #7c3aed; --green: #34d399; --red: #f87171;
+            --amber: #fbbf24; --pink: #f472b6; --blue: #60a5fa;
+            --radius: 16px; --radius-sm: 10px;
+            font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text);
+            min-height: 100vh; display: flex; overflow: hidden;
+            position: fixed; inset: 0; z-index: 9999;
+        }
+        #admin-app *, #admin-app *::before, #admin-app *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        #admin-app .sidebar { width: 260px; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; height: 100%; position: relative; flex-shrink: 0; }
+        #admin-app .sidebar-brand { padding: 28px 24px 20px; border-bottom: 1px solid var(--border); }
+        #admin-app .sidebar-brand h1 { font-size: 20px; font-weight: 800; background: linear-gradient(135deg, var(--accent), var(--pink)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: -0.5px; }
+        #admin-app .sidebar-brand p { font-size: 11px; color: var(--text3); margin-top: 4px; letter-spacing: 0.5px; text-transform: uppercase; }
+        #admin-app .nav-list { padding: 16px 12px; flex: 1; display: flex; flex-direction: column; gap: 4px; }
+        #admin-app .nav-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: var(--radius-sm); color: var(--text2); font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s; border: 1px solid transparent; }
+        #admin-app .nav-item:hover { background: rgba(255,255,255,0.04); color: var(--text); }
+        #admin-app .nav-item.nav-active { background: linear-gradient(135deg, rgba(168,85,247,0.12), rgba(124,58,237,0.08)); color: var(--text); border-color: rgba(168,85,247,0.2); }
+        #admin-app .nav-item.nav-active .nav-icon { color: var(--accent); }
+        #admin-app .nav-icon { font-size: 18px; width: 24px; text-align: center; }
+        #admin-app .sidebar-footer { padding: 16px 20px; border-top: 1px solid var(--border); }
+        #admin-app .sidebar-footer a { display: flex; align-items: center; gap: 8px; color: var(--text3); font-size: 13px; text-decoration: none; transition: color 0.2s; }
+        #admin-app .sidebar-footer a:hover { color: var(--text); }
+
+        #admin-app .main-content { flex: 1; height: 100%; overflow-y: auto; overflow-x: hidden; }
+        #admin-app .topbar { padding: 20px 32px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); background: rgba(9,9,11,0.8); backdrop-filter: blur(12px); position: sticky; top: 0; z-index: 30; }
+        #admin-app .topbar h2 { font-size: 22px; font-weight: 700; letter-spacing: -0.3px; }
+        #admin-app .topbar-actions { display: flex; gap: 10px; }
+        #admin-app .btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; border: none; cursor: pointer; transition: all 0.2s; }
+        #admin-app .btn-ghost { background: var(--surface); border: 1px solid var(--border); color: var(--text2); }
+        #admin-app .btn-ghost:hover { background: var(--surface2); color: var(--text); border-color: var(--border2); }
+        #admin-app .btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: white; box-shadow: 0 4px 20px rgba(168,85,247,0.25); }
+        #admin-app .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 25px rgba(168,85,247,0.35); }
+        #admin-app .btn-primary:active { transform: translateY(0); }
+
+
+        #admin-app .page-content { padding: 28px 32px; }
+        #admin-app .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 28px; }
+        #admin-app .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px 24px; position: relative; overflow: hidden; transition: border-color 0.3s; }
+        #admin-app .stat-card:hover { border-color: var(--border2); }
+        #admin-app .stat-card::before { content: ''; position: absolute; top: 0; right: 0; width: 80px; height: 80px; border-radius: 50%; filter: blur(40px); opacity: 0.15; }
+        #admin-app .stat-card:nth-child(1)::before { background: var(--accent); }
+        #admin-app .stat-card:nth-child(2)::before { background: var(--green); }
+        #admin-app .stat-card:nth-child(3)::before { background: var(--amber); }
+        #admin-app .stat-card:nth-child(4)::before { background: var(--blue); }
+        #admin-app .stat-card:nth-child(5)::before { background: var(--pink); }
+        #admin-app .stat-card:nth-child(6)::before { background: var(--red); }
+        #admin-app .stat-label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; margin-bottom: 8px; }
+        #admin-app .stat-value { font-size: 28px; font-weight: 800; letter-spacing: -1px; }
+        #admin-app .stat-value.green { color: var(--green); }
+        #admin-app .stat-value.amber { color: var(--amber); }
+        #admin-app .stat-value.accent { color: var(--accent); }
+        #admin-app .stat-value.pink { color: var(--pink); }
+
+        #admin-app .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+        #admin-app .card-header { padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        #admin-app .card-header h3 { font-size: 16px; font-weight: 700; }
+        #admin-app .card-body { padding: 20px 24px; }
+
+        #admin-app .tx-table { width: 100%; border-collapse: collapse; }
+        #admin-app .tx-table th { text-align: left; padding: 12px 20px; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text3); font-weight: 600; border-bottom: 1px solid var(--border); }
+        #admin-app .tx-table td { padding: 0; }
+
+        #admin-app .frame-section-title { font-size: 14px; font-weight: 700; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; padding: 10px 0; color: var(--text); }
+        #admin-app .frame-section-title .dot { width: 8px; height: 8px; border-radius: 50%; }
+        #admin-app .frame-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 14px; margin-bottom: 28px; }
+        #admin-app .frame-card { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; transition: all 0.25s; }
+        #admin-app .frame-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,0,0,0.3); }
+        #admin-app .frame-thumb { width: 100%; aspect-ratio: 2/3; background: #111; overflow: hidden; }
+        #admin-app .frame-thumb img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }
+        #admin-app .frame-card:hover .frame-thumb img { transform: scale(1.05); }
+        #admin-app .badge-default { font-size: 9px; background: var(--surface); padding: 2px 8px; border-radius: 20px; color: var(--text3); font-weight: 600; border: 1px solid var(--border); }
+        #admin-app .badge-custom { font-size: 9px; background: rgba(168,85,247,0.12); padding: 2px 8px; border-radius: 20px; color: var(--accent); font-weight: 700; border: 1px solid rgba(168,85,247,0.2); }
+        #admin-app .btn-edit { flex: 1; padding: 6px; border-radius: 6px; font-size: 11px; font-weight: 600; background: rgba(96,165,250,0.1); color: var(--blue); border: 1px solid rgba(96,165,250,0.15); cursor: pointer; transition: all 0.2s; }
+        #admin-app .btn-edit:hover { background: rgba(96,165,250,0.2); }
+        #admin-app .btn-delete { flex: 1; padding: 6px; border-radius: 6px; font-size: 11px; font-weight: 600; background: rgba(248,113,113,0.08); color: var(--red); border: 1px solid rgba(248,113,113,0.12); cursor: pointer; transition: all 0.2s; }
+        #admin-app .btn-delete:hover { background: rgba(248,113,113,0.18); }
+
+        #admin-app .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); z-index: 50; display: flex; align-items: center; justify-content: center; padding: 20px; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+        #admin-app .modal-backdrop.modal-visible { opacity: 1; pointer-events: all; }
+        #admin-app .modal-backdrop.modal-visible .modal-box { transform: scale(1) translateY(0); }
+        #admin-app .modal-box { background: var(--surface); border: 1px solid var(--border2); border-radius: 20px; width: 100%; max-width: 1100px; height: 88vh; display: flex; flex-direction: column; box-shadow: 0 25px 80px rgba(0,0,0,0.6); transform: scale(0.95) translateY(10px); transition: transform 0.3s; }
+        #admin-app .modal-header { padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+        #admin-app .modal-header h3 { font-size: 18px; font-weight: 700; }
+        #admin-app .modal-close { width: 36px; height: 36px; border-radius: 10px; background: var(--surface2); border: 1px solid var(--border); color: var(--text3); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; transition: all 0.2s; }
+        #admin-app .modal-close:hover { background: var(--border); color: var(--text); }
+        #admin-app .modal-body { flex: 1; display: flex; overflow: hidden; }
+        #admin-app .modal-sidebar { width: 320px; padding: 20px; border-right: 1px solid var(--border); overflow-y: auto; flex-shrink: 0; display: flex; flex-direction: column; gap: 16px; }
+        #admin-app .modal-canvas { flex: 1; padding: 20px; background: var(--bg); display: flex; align-items: center; justify-content: center; }
+        #admin-app .modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 10px; flex-shrink: 0; }
+        #admin-app .form-label { font-size: 12px; color: var(--text3); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; display: block; }
+        #admin-app .form-input { width: 100%; padding: 10px 14px; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-size: 14px; outline: none; transition: border-color 0.2s; font-family: 'Inter', sans-serif; }
+        #admin-app .form-input:focus { border-color: var(--accent); }
+        #admin-app .form-input[type="file"] { font-size: 12px; padding: 8px; }
+        #admin-app .form-input[type="file"]::file-selector-button { background: rgba(168,85,247,0.15); color: var(--accent); border: none; padding: 6px 14px; border-radius: 8px; font-weight: 600; font-size: 12px; cursor: pointer; margin-right: 10px; }
+        #admin-app .btn-tool { width: 100%; padding: 10px; border-radius: 10px; font-size: 13px; font-weight: 600; border: 1px solid; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px; background: transparent; }
+        #admin-app .btn-tool-add { background: rgba(168,85,247,0.1); color: var(--accent); border-color: rgba(168,85,247,0.2); }
+        #admin-app .btn-tool-add:hover { background: rgba(168,85,247,0.2); }
+        #admin-app .btn-tool-remove { background: rgba(248,113,113,0.08); color: var(--red); border-color: rgba(248,113,113,0.12); }
+        #admin-app .btn-tool-remove:hover { background: rgba(248,113,113,0.15); }
+        #admin-app .btn-tool-reset { background: var(--surface2); color: var(--text3); border-color: var(--border); }
+        #admin-app .btn-tool-reset:hover { color: var(--text); background: var(--border); }
+
+        #admin-app .readout-box { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 12px; font-family: monospace; font-size: 11px; color: var(--text3); display: flex; flex-direction: column; gap: 4px; max-height: 120px; overflow-y: auto; }
+        #admin-app .readout-row { display: flex; gap: 8px; }
+        #admin-app .readout-id { color: var(--accent); font-weight: 700; min-width: 28px; }
+
+        #admin-app .editor-wrap { position: relative; aspect-ratio: 2/3; background: #111; border: 2px dashed var(--border); border-radius: 12px; overflow: hidden; height: 100%; max-height: 700px; }
+        #admin-app .editor-block { position: absolute; border: 2px dashed rgba(168,85,247,0.7); background: rgba(168,85,247,0.2); display: flex; align-items: center; justify-content: center; cursor: move; transition: border-color 0.15s; }
+        #admin-app .editor-block:hover { border-color: var(--accent); background: rgba(168,85,247,0.3); }
+        #admin-app .block-label { font-size: 32px; font-weight: 900; color: white; text-shadow: 0 2px 8px rgba(0,0,0,0.5); pointer-events: none; }
+        #admin-app .rotate-handle { position: absolute; left: -8px; top: -8px; width: 22px; height: 22px; background: var(--blue); border: 2px solid white; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 10px; color: white; opacity: 0; transition: opacity 0.2s; z-index: 50; }
+        #admin-app .resize-handle { position: absolute; right: -5px; bottom: -5px; width: 16px; height: 16px; background: var(--accent); border: 2px solid white; border-radius: 50%; cursor: nwse-resize; opacity: 0; transition: opacity 0.2s; z-index: 50; }
+        #admin-app .copy-handle { position: absolute; right: -8px; top: -8px; width: 22px; height: 22px; background: var(--green); border: 2px solid white; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 10px; color: white; opacity: 0; transition: opacity 0.2s; z-index: 50; }
+        #admin-app .editor-block:hover .rotate-handle, #admin-app .editor-block:hover .resize-handle, #admin-app .editor-block:hover .copy-handle { opacity: 1; }
+
+        #admin-app #toast-container { position: fixed; top: 20px; right: 20px; z-index: 10050; display: flex; flex-direction: column; gap: 8px; }
+        #admin-app .toast { padding: 12px 18px; border-radius: 12px; font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 8px; opacity: 0; transform: translateX(20px); transition: all 0.3s; backdrop-filter: blur(12px); border: 1px solid var(--border); }
+        #admin-app .toast-visible { opacity: 1; transform: translateX(0); }
+        #admin-app .toast-success { background: rgba(52,211,153,0.12); color: var(--green); border-color: rgba(52,211,153,0.2); }
+        #admin-app .toast-error { background: rgba(248,113,113,0.12); color: var(--red); border-color: rgba(248,113,113,0.2); }
+        #admin-app .toast-info { background: rgba(96,165,250,0.12); color: var(--blue); border-color: rgba(96,165,250,0.2); }
+
+        #admin-app .hidden { display: none !important; }
+        #admin-app .animate-spin { animation: admin-spin 1s linear infinite; }
+        @keyframes admin-spin { to { transform: rotate(360deg); } }
+
+        #admin-app ::-webkit-scrollbar { width: 6px; }
+        #admin-app ::-webkit-scrollbar-track { background: transparent; }
+        #admin-app ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+        #admin-app ::-webkit-scrollbar-thumb:hover { background: var(--border2); }
+    </style>
+</head>
+<body>
+    <div id="admin-app">
+    <!-- Toast Container -->
+    <div id="toast-container"></div>
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <h1>📸 Photobox Studio</h1>
+            <p>Admin Console v3</p>
+        </div>
+        <nav class="nav-list">
+            <div class="nav-item nav-active" data-nav="dashboard">
+                <span class="nav-icon">📊</span> Dashboard
             </div>
-            <div class="flex gap-3">
-                <button id="refresh-btn" class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-xl border border-zinc-700 font-medium flex items-center gap-2 transition-colors text-sm">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182" />
-                    </svg>
-                    Refresh
-                </button>
-                <a href="/" class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-xl border border-zinc-700 font-medium flex items-center gap-2 transition-colors text-sm">
-                    ← Back to Kiosk
-                </a>
+            <div class="nav-item" data-nav="frames">
+                <span class="nav-icon">🖼️</span> Frame Manager
+            </div>
+            <div class="nav-item" data-nav="transactions">
+                <span class="nav-icon">💳</span> Transaksi
+            </div>
+            <div class="nav-item" data-nav="printer">
+                <span class="nav-icon">🖨️</span> Printer
+            </div>
+        </nav>
+        <div class="sidebar-footer">
+            <a href="/">← Kembali ke Kiosk</a>
+        </div>
+    </aside>
+
+    <!-- Main -->
+    <div class="main-content">
+        <!-- Topbar -->
+        <div class="topbar">
+            <h2 id="topbar-title">📊 Dashboard</h2>
+            <div class="topbar-actions">
+                <button class="btn btn-ghost" id="refresh-btn">🔄 Refresh</button>
             </div>
         </div>
 
-        <!-- ═══════════════════════════════════════════════════════
-             SECTION 1: Stats Cards
-             ═══════════════════════════════════════════════════════ -->
-        <div class="grid grid-cols-5 gap-4 mb-8 w-full">
-            <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
-                <p class="text-zinc-500 text-xs font-medium mb-1 uppercase tracking-wider">Total Sessions</p>
-                <p class="text-3xl font-bold" id="stat-sessions">—</p>
+        <!-- PAGE: Dashboard -->
+        <div class="page-content" data-page="dashboard">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <p class="stat-label">Total Sesi</p>
+                    <p class="stat-value" id="stat-sessions">0</p>
+                </div>
+                <div class="stat-card">
+                    <p class="stat-label">Pendapatan</p>
+                    <p class="stat-value green" id="stat-revenue">Rp 0</p>
+                </div>
+                <div class="stat-card">
+                    <p class="stat-label">Paket Strip</p>
+                    <p class="stat-value accent" id="stat-basic">0</p>
+                </div>
+                <div class="stat-card">
+                    <p class="stat-label">Paket 4R</p>
+                    <p class="stat-value pink" id="stat-premium">0</p>
+                </div>
+                <div class="stat-card">
+                    <p class="stat-label">Menunggu Bayar</p>
+                    <p class="stat-value amber" id="stat-pending">0</p>
+                </div>
+                <div class="stat-card">
+                    <p class="stat-label">Total Frame</p>
+                    <p class="stat-value" id="stat-frames">0</p>
+                </div>
             </div>
-            <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
-                <p class="text-zinc-500 text-xs font-medium mb-1 uppercase tracking-wider">Revenue</p>
-                <p class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-400" id="stat-revenue">—</p>
-            </div>
-            <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
-                <p class="text-zinc-500 text-xs font-medium mb-1 uppercase tracking-wider">Basic / Premium</p>
-                <p class="text-3xl font-bold" id="stat-packages">—</p>
-            </div>
-            <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
-                <p class="text-zinc-500 text-xs font-medium mb-1 uppercase tracking-wider">Active Pending</p>
-                <p class="text-3xl font-bold text-amber-400" id="stat-pending">—</p>
-            </div>
-            <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
-                <p class="text-zinc-500 text-xs font-medium mb-1 uppercase tracking-wider">Total Frames</p>
-                <p class="text-3xl font-bold text-purple-400" id="stat-frames">—</p>
+            <div class="card">
+                <div class="card-header"><h3>Transaksi Terbaru</h3></div>
+                <table class="tx-table">
+                    <thead><tr><th>ID</th><th>Paket</th><th>Jumlah</th><th>Status</th><th>Waktu</th><th>Aksi</th></tr></thead>
+                    <tbody id="tx-body"><tr><td colspan="6" style="padding:40px;text-align:center;color:#71717a;">Memuat...</td></tr></tbody>
+                </table>
             </div>
         </div>
 
-        <!-- Two-column layout -->
-        <div class="grid grid-cols-3 gap-6 w-full mb-8">
-            
-            <!-- ═══════════════════════════════════════════════════
-                 LEFT COL: Quick Actions + Transactions
-                 ═══════════════════════════════════════════════════ -->
-            <div class="col-span-2 flex flex-col gap-6">
-                
-                <!-- Quick Actions -->
-                <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
-                    <h2 class="text-lg font-bold mb-4 flex items-center gap-2">🔧 Quick Actions</h2>
-                    <div class="flex gap-3 items-center flex-wrap">
-                        <input type="text" id="sim-tx-id" placeholder="Transaction ID (TX-...)" class="px-4 py-2 bg-zinc-950 border border-zinc-700 rounded-xl text-sm font-mono flex-1 min-w-[280px] focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500/30" />
-                        <button id="sim-pay-btn" class="px-4 py-2 bg-green-600 hover:bg-green-500 rounded-xl font-bold text-sm transition-colors whitespace-nowrap">
-                            ✅ Simulate Pay
-                        </button>
+        <!-- PAGE: Frames -->
+        <div class="page-content hidden" data-page="frames">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;">
+                <div>
+                    <h3 style="font-size:18px;font-weight:700;">Kelola Template Frame</h3>
+                    <p style="font-size:13px;color:var(--text3);margin-top:4px;">Upload overlay PNG dari Canva/Photoshop dan atur posisi foto.</p>
+                </div>
+                <button class="btn btn-primary" id="add-frame-btn">＋ Upload Frame Baru</button>
+            </div>
+
+            <div class="frame-section-title"><span class="dot" style="background:var(--accent)"></span> Paket 1: Strip (2R)</div>
+            <div class="frame-grid" id="frame-list-basic"><p style="color:var(--text3);grid-column:1/-1;text-align:center;padding:40px 0;">Memuat frame...</p></div>
+
+            <div class="frame-section-title" style="margin-top:12px;"><span class="dot" style="background:var(--pink)"></span> Paket 2: 4R Penuh</div>
+            <div class="frame-grid" id="frame-list-premium"><p style="color:var(--text3);grid-column:1/-1;text-align:center;padding:40px 0;">Memuat frame...</p></div>
+        </div>
+
+        <!-- PAGE: Transactions -->
+        <div class="page-content hidden" data-page="transactions">
+            <div class="card">
+                <div class="card-header"><h3>💳 Riwayat Transaksi Lengkap</h3></div>
+                <table class="tx-table">
+                    <thead><tr><th>ID</th><th>Paket</th><th>Jumlah</th><th>Status</th><th>Waktu</th><th>Aksi</th></tr></thead>
+                    <tbody id="tx-body-full"><tr><td colspan="6" style="padding:40px;text-align:center;color:#71717a;">Memuat...</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- PAGE: Printer Settings -->
+        <div class="page-content hidden" data-page="printer">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;">
+                <!-- Current Settings Card -->
+                <div class="card">
+                    <div class="card-header"><h3>⚙️ Pengaturan Saat Ini</h3></div>
+                    <div class="card-body" id="printer-current" style="display:flex;flex-direction:column;gap:12px;">
+                        <p style="color:var(--text3);font-size:13px;">Memuat info printer...</p>
                     </div>
                 </div>
-
-                <!-- Recent Transactions -->
-                <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
-                    <h2 class="text-lg font-bold mb-4 flex items-center gap-2">📋 Recent Transactions</h2>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-sm">
-                            <thead>
-                                <tr class="text-zinc-500 border-b border-zinc-800">
-                                    <th class="text-left py-3 px-3 font-medium text-xs uppercase tracking-wider">Transaction ID</th>
-                                    <th class="text-left py-3 px-3 font-medium text-xs uppercase tracking-wider">Package</th>
-                                    <th class="text-left py-3 px-3 font-medium text-xs uppercase tracking-wider">Amount</th>
-                                    <th class="text-left py-3 px-3 font-medium text-xs uppercase tracking-wider">Status</th>
-                                    <th class="text-left py-3 px-3 font-medium text-xs uppercase tracking-wider">Created</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tx-table-body">
-                                <tr><td colspan="5" class="py-8 text-center text-zinc-500">Loading...</td></tr>
-                            </tbody>
-                        </table>
+                <!-- Printer List Card -->
+                <div class="card">
+                    <div class="card-header"><h3>📋 Printer Terinstal</h3></div>
+                    <div class="card-body" id="printer-list" style="display:flex;flex-direction:column;gap:8px;">
+                        <p style="color:var(--text3);font-size:13px;">Memuat daftar printer...</p>
                     </div>
                 </div>
             </div>
 
-            <!-- ═══════════════════════════════════════════════════
-                 RIGHT COL: System Status
-                 ═══════════════════════════════════════════════════ -->
-            <div class="flex flex-col gap-6">
-                <!-- System Status -->
-                <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
-                    <h2 class="text-lg font-bold mb-4 flex items-center gap-2">🖥️ System Status</h2>
-                    <div class="space-y-3">
-                        <div class="flex items-center justify-between">
-                            <span class="text-zinc-400 text-sm">Backend</span>
-                            <div class="flex items-center gap-2">
-                                <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                                <span class="text-sm text-green-400 font-medium">Online</span>
-                            </div>
-                        </div>
-                        <div class="flex items-center justify-between">
-                            <span class="text-zinc-400 text-sm">Frontend</span>
-                            <div class="flex items-center gap-2">
-                                <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                                <span class="text-sm text-green-400 font-medium">Online</span>
-                            </div>
-                        </div>
-                        <div class="flex items-center justify-between">
-                            <span class="text-zinc-400 text-sm">WebSocket</span>
-                            <div class="flex items-center gap-2">
-                                <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                                <span class="text-sm text-green-400 font-medium">Connected</span>
-                            </div>
-                        </div>
-                        <hr class="border-zinc-800" />
-                        <div class="flex items-center justify-between">
-                            <span class="text-zinc-400 text-sm">Camera</span>
-                            <span class="text-sm text-zinc-500 font-mono">MOCK</span>
-                        </div>
-                        <div class="flex items-center justify-between">
-                            <span class="text-zinc-400 text-sm">Printer</span>
-                            <span class="text-sm text-zinc-500 font-mono">MOCK</span>
-                        </div>
-                        <div class="flex items-center justify-between">
-                            <span class="text-zinc-400 text-sm">Payment</span>
-                            <span class="text-sm text-zinc-500 font-mono">MOCK QRIS</span>
-                        </div>
-                        <hr class="border-zinc-800" />
-                        <div class="flex items-center justify-between">
-                            <span class="text-zinc-400 text-sm">Session Uptime</span>
-                            <span class="text-sm text-zinc-300 font-mono" id="uptime">0m 0s</span>
-                        </div>
-                        <div class="flex items-center justify-between">
-                            <span class="text-zinc-400 text-sm">Version</span>
-                            <span class="text-sm text-zinc-300 font-mono">v3.0</span>
-                        </div>
-                    </div>
+            <!-- Test Print Card -->
+            <div class="card">
+                <div class="card-header">
+                    <h3>🧪 Test Print</h3>
+                    <button class="btn btn-ghost" id="open-printer-settings-btn" style="font-size:12px;">🪟 Buka Setting Printer Windows</button>
                 </div>
-
-                <!-- Revenue Chart (simple bars) -->
-                <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
-                    <h2 class="text-lg font-bold mb-4 flex items-center gap-2">📊 Revenue Today</h2>
-                    <canvas id="revenue-chart" class="w-full" height="120"></canvas>
-                    <p class="text-xs text-zinc-500 mt-2 text-center" id="chart-label">No data yet</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- ═══════════════════════════════════════════════════════
-             SECTION 2: Frame Management
-             ═══════════════════════════════════════════════════════ -->
-        <div class="w-full mb-8">
-            <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
-                <div class="flex items-center justify-between mb-6">
-                    <h2 class="text-xl font-bold flex items-center gap-2">🖼️ Frame Management</h2>
-                    <button id="add-frame-btn" class="px-4 py-2 bg-purple-600 hover:bg-purple-500 rounded-xl font-bold text-sm transition-colors flex items-center gap-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                        </svg>
-                        Add Custom Frame
-                    </button>
-                </div>
-
-                <!-- Frame List -->
-                <div class="grid grid-cols-4 gap-4" id="frame-list">
-                    <p class="text-zinc-500 col-span-4 text-center py-8">Loading frames...</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- ═══════════════════════════════════════════════════════
-             MODAL: Add/Edit Frame
-             ═══════════════════════════════════════════════════════ -->
-        <div id="frame-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-8">
-            <div class="bg-zinc-900 border border-zinc-700 rounded-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto shadow-2xl">
-                <div class="p-6 border-b border-zinc-800 flex justify-between items-center sticky top-0 bg-zinc-900 rounded-t-2xl z-10">
-                    <h3 class="text-xl font-bold" id="modal-title">Add Custom Frame</h3>
-                    <button id="close-modal" class="w-8 h-8 rounded-lg bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center transition-colors">✕</button>
-                </div>
-                <div class="p-6 grid grid-cols-2 gap-6">
-                    <!-- Left: Form -->
-                    <div class="space-y-4">
+                <div class="card-body">
+                    <p style="color:var(--text3);font-size:13px;margin-bottom:16px;">Atur setting lalu tekan Test Print untuk coba cetak foto terakhir.</p>
+                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;margin-bottom:16px;">
                         <div>
-                            <label class="block text-sm font-medium text-zinc-400 mb-1">Frame Name *</label>
-                            <input type="text" id="f-name" placeholder="e.g. Galaxy Night" class="w-full px-3 py-2 bg-zinc-950 border border-zinc-700 rounded-xl text-sm focus:border-purple-500 focus:outline-none" />
+                            <label class="form-label">Printer</label>
+                            <select id="tp-printer" class="form-input"><option value="">Default Printer</option></select>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-zinc-400 mb-1">Subtitle</label>
-                            <input type="text" id="f-subtitle" placeholder="e.g. Dark & Moody" class="w-full px-3 py-2 bg-zinc-950 border border-zinc-700 rounded-xl text-sm focus:border-purple-500 focus:outline-none" />
-                        </div>
-                        <div class="grid grid-cols-2 gap-3">
-                            <div>
-                                <label class="block text-sm font-medium text-zinc-400 mb-1">Background Color</label>
-                                <div class="flex gap-2 items-center">
-                                    <input type="color" id="f-bgColor" value="#ffffff" class="w-10 h-10 rounded-lg bg-transparent cursor-pointer border border-zinc-700" />
-                                    <input type="text" id="f-bgColor-text" value="#ffffff" class="flex-1 px-2 py-2 bg-zinc-950 border border-zinc-700 rounded-lg text-xs font-mono focus:border-purple-500 focus:outline-none" />
-                                </div>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-zinc-400 mb-1">Photo Border Color</label>
-                                <div class="flex gap-2 items-center">
-                                    <input type="color" id="f-photoBorder" value="#e0e0e0" class="w-10 h-10 rounded-lg bg-transparent cursor-pointer border border-zinc-700" />
-                                    <input type="text" id="f-photoBorder-text" value="#e0e0e0" class="flex-1 px-2 py-2 bg-zinc-950 border border-zinc-700 rounded-lg text-xs font-mono focus:border-purple-500 focus:outline-none" />
-                                </div>
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-2 gap-3">
-                            <div>
-                                <label class="block text-sm font-medium text-zinc-400 mb-1">Text Color</label>
-                                <div class="flex gap-2 items-center">
-                                    <input type="color" id="f-textColor" value="#333333" class="w-10 h-10 rounded-lg bg-transparent cursor-pointer border border-zinc-700" />
-                                    <input type="text" id="f-textColor-text" value="#333333" class="flex-1 px-2 py-2 bg-zinc-950 border border-zinc-700 rounded-lg text-xs font-mono focus:border-purple-500 focus:outline-none" />
-                                </div>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-zinc-400 mb-1">Accent Color</label>
-                                <div class="flex gap-2 items-center">
-                                    <input type="color" id="f-accentColor" value="#a855f7" class="w-10 h-10 rounded-lg bg-transparent cursor-pointer border border-zinc-700" />
-                                    <input type="text" id="f-accentColor-text" value="#a855f7" class="flex-1 px-2 py-2 bg-zinc-950 border border-zinc-700 rounded-lg text-xs font-mono focus:border-purple-500 focus:outline-none" />
-                                </div>
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-2 gap-3">
-                            <div>
-                                <label class="block text-sm font-medium text-zinc-400 mb-1">Border Width</label>
-                                <input type="range" id="f-borderWidth" min="0" max="6" value="2" class="w-full accent-purple-500" />
-                                <span class="text-xs text-zinc-500" id="f-borderWidth-val">2px</span>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-zinc-400 mb-1">Photo Radius</label>
-                                <input type="range" id="f-photoRadius" min="0" max="20" value="4" class="w-full accent-purple-500" />
-                                <span class="text-xs text-zinc-500" id="f-photoRadius-val">4px</span>
-                            </div>
+                            <label class="form-label">Ukuran Kertas</label>
+                            <select id="tp-paper" class="form-input"></select>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-zinc-400 mb-1">Footer Text</label>
-                            <input type="text" id="f-footerText" value="Photobox Studio" class="w-full px-3 py-2 bg-zinc-950 border border-zinc-700 rounded-xl text-sm focus:border-purple-500 focus:outline-none" />
+                            <label class="form-label">Kualitas</label>
+                            <select id="tp-quality" class="form-input"></select>
                         </div>
-                        <div class="grid grid-cols-2 gap-3">
-                            <div>
-                                <label class="block text-sm font-medium text-zinc-400 mb-1">Photo Filter</label>
-                                <select id="f-filter" class="w-full px-3 py-2 bg-zinc-950 border border-zinc-700 rounded-xl text-sm focus:border-purple-500 focus:outline-none">
-                                    <option value="none">None</option>
-                                    <option value="sepia">Sepia (Vintage)</option>
-                                    <option value="grayscale">Black & White</option>
-                                    <option value="high-contrast">High Contrast</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-zinc-400 mb-1">Decorations</label>
-                                <select id="f-decorations" class="w-full px-3 py-2 bg-zinc-950 border border-zinc-700 rounded-xl text-sm focus:border-purple-500 focus:outline-none">
-                                    <option value="none">None</option>
-                                    <option value="film-sprockets">Film Sprockets</option>
-                                    <option value="neon-border">Neon Border</option>
-                                    <option value="flowers">Flowers</option>
-                                </select>
-                            </div>
+                        <div>
+                            <label class="form-label">Warna</label>
+                            <select id="tp-color" class="form-input">
+                                <option value="color">Full Color</option>
+                                <option value="grayscale">Grayscale (Hitam Putih)</option>
+                            </select>
                         </div>
                     </div>
-
-                    <!-- Right: Live Preview -->
-                    <div class="flex flex-col items-center">
-                        <p class="text-sm text-zinc-400 mb-3 font-medium">Live Preview</p>
-                        <div class="bg-zinc-950 rounded-xl p-4 border border-zinc-800 flex items-center justify-center">
-                            <canvas id="modal-preview-canvas" class="rounded-lg" style="max-height: 400px;"></canvas>
-                        </div>
-                        <button id="preview-update-btn" class="mt-3 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-xl text-sm font-medium transition-colors border border-zinc-700 flex items-center gap-2">
-                            🔄 Update Preview
-                        </button>
+                    <div style="display:flex;gap:12px;align-items:center;">
+                        <button class="btn btn-primary" id="test-print-btn" style="min-width:180px;">🖨️ Test Print 1 Lembar</button>
+                        <span id="test-print-status" style="font-size:13px;color:var(--text3);"></span>
                     </div>
+                    <div id="test-print-log" style="margin-top:12px;display:none;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px;font-family:monospace;font-size:11px;color:var(--text3);max-height:200px;overflow-y:auto;white-space:pre-wrap;"></div>
                 </div>
-                <div class="p-6 border-t border-zinc-800 flex justify-end gap-3">
-                    <button id="cancel-modal" class="px-6 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-xl font-medium transition-colors border border-zinc-700">Cancel</button>
-                    <button id="save-frame-btn" class="px-6 py-2 bg-gradient-to-r from-purple-600 to-fuchsia-600 text-white rounded-xl font-bold transition-colors hover:opacity-90">Save Frame</button>
+            </div>
+
+            <!-- Guide Card -->
+            <div class="card" style="margin-top:16px;">
+                <div class="card-header"><h3>📖 Panduan Setting Borderless</h3></div>
+                <div class="card-body" style="color:var(--text2);font-size:13px;line-height:1.8;">
+                    <p style="margin-bottom:12px;"><strong style="color:var(--text);">Langkah-langkah agar hasil cetak borderless (tanpa pinggiran putih):</strong></p>
+                    <ol style="padding-left:20px;display:flex;flex-direction:column;gap:8px;">
+                        <li>Klik <strong style="color:var(--accent);">"Buka Setting Printer Windows"</strong> di atas</li>
+                        <li>Di jendela Printing Preferences, cari tab <strong>"Page Setup"</strong> atau <strong>"Layout"</strong></li>
+                        <li>Set <strong>Paper Size</strong> ke ukuran kertas foto kamu (e.g. 4x6 / Postcard)</li>
+                        <li>Cari opsi <strong>"Borderless"</strong> atau <strong>"Tanpa Batas"</strong> → <strong>aktifkan</strong></li>
+                        <li>Cari tab <strong>"Media/Quality"</strong> atau <strong>"Color"</strong>:</li>
+                        <li style="list-style:none;padding-left:16px;">• Set <strong>Media Type</strong> = "Photo Paper" atau "Glossy"</li>
+                        <li style="list-style:none;padding-left:16px;">• Set <strong>Quality</strong> = "Best" atau "High"</li>
+                        <li style="list-style:none;padding-left:16px;">• Set <strong>Color</strong> = "Color" (bukan Grayscale)</li>
+                        <li>Klik <strong>OK / Apply</strong> untuk simpan</li>
+                        <li>Lalu tekan <strong style="color:var(--accent);">"Test Print"</strong> untuk coba hasil cetak</li>
+                    </ol>
+                    <div style="margin-top:16px;padding:12px 16px;background:rgba(168,85,247,0.08);border:1px solid rgba(168,85,247,0.15);border-radius:10px;">
+                        <p style="color:var(--accent);font-weight:600;font-size:12px;">💡 TIP: Printer foto populer untuk photobox:</p>
+                        <p style="font-size:12px;margin-top:4px;">Canon SELPHY CP1500, DNP DS620A, HiTi P525L, Mitsubishi CP-D90DW</p>
+                    </div>
                 </div>
             </div>
         </div>
-
     </div>
 
-    <script src="/js/strip-renderer.js" is:inline></script>
-    <script is:inline>
-        const BACKEND_URL = 'http://localhost:3000';
-        const startTime = Date.now();
-
-        // ─── Utilities ───────────────────────────────────────────
-        function formatCurrency(n) {
-            return 'Rp ' + n.toLocaleString('id-ID');
-        }
-        function formatTime(ts) {
-            return new Date(ts).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-        }
-        function statusBadge(status) {
-            const styles = {
-                PENDING: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
-                PAID: 'bg-green-500/20 text-green-400 border-green-500/30',
-                EXPIRED: 'bg-red-500/20 text-red-400 border-red-500/30'
-            };
-            const s = styles[status] || 'bg-zinc-700 text-zinc-400 border-zinc-600';
-            return `<span class="px-3 py-1 rounded-full text-xs font-bold border ${s}">${status}</span>`;
-        }
-
-        // ─── Load Stats ──────────────────────────────────────────
-        async function loadStats() {
-            try {
-                const res = await fetch(`${BACKEND_URL}/api/admin/stats`);
-                const data = await res.json();
-
-                document.getElementById('stat-sessions').innerText = data.totalSessions;
-                document.getElementById('stat-revenue').innerText = formatCurrency(data.totalRevenue);
-                document.getElementById('stat-packages').innerText = `${data.packageCounts.basic || 0} / ${data.packageCounts.premium || 0}`;
-                document.getElementById('stat-pending').innerText = data.activePending;
-                document.getElementById('stat-frames').innerText = `${data.totalFrames} (${data.customFrames} custom)`;
-
-                // Transaction Table
-                const tbody = document.getElementById('tx-table-body');
-                if (data.recentTransactions.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="5" class="py-8 text-center text-zinc-500">No transactions yet</td></tr>';
-                } else {
-                    tbody.innerHTML = data.recentTransactions.map(tx => `
-                        <tr class="border-b border-zinc-800/50 hover:bg-zinc-800/30 transition-colors">
-                            <td class="py-2.5 px-3 font-mono text-xs">${tx.id}</td>
-                            <td class="py-2.5 px-3 capitalize text-sm">${tx.package}</td>
-                            <td class="py-2.5 px-3 font-medium text-sm">${formatCurrency(tx.amount)}</td>
-                            <td class="py-2.5 px-3">${statusBadge(tx.status)}</td>
-                            <td class="py-2.5 px-3 text-zinc-400 text-sm">${formatTime(tx.createdAt)}</td>
-                        </tr>
-                    `).join('');
-                }
-
-                // Revenue Chart
-                drawRevenueChart(data);
-
-            } catch (err) {
-                console.error('Stats load failed:', err);
-            }
-        }
-
-        function drawRevenueChart(data) {
-            const canvas = document.getElementById('revenue-chart');
-            const ctx = canvas.getContext('2d');
-            const dpr = window.devicePixelRatio || 1;
-            const W = canvas.clientWidth;
-            const H = 120;
-            canvas.width = W * dpr;
-            canvas.height = H * dpr;
-            ctx.scale(dpr, dpr);
-            ctx.clearRect(0, 0, W, H);
-
-            if (!data.dailyHistory || data.dailyHistory.length === 0) {
-                document.getElementById('chart-label').innerText = 'No revenue data yet';
-                return;
-            }
-
-            const maxRevenue = Math.max(...data.dailyHistory.map(d => d.revenue), 1);
-            const barW = Math.min(40, (W - 20) / data.dailyHistory.length - 5);
-
-            data.dailyHistory.slice(-7).forEach((day, i) => {
-                const x = 10 + i * (barW + 8);
-                const barH = (day.revenue / maxRevenue) * (H - 30);
-                const y = H - barH - 20;
-
-                // Bar
-                const grad = ctx.createLinearGradient(x, y, x, H - 20);
-                grad.addColorStop(0, '#a855f7');
-                grad.addColorStop(1, '#7c3aed');
-                ctx.fillStyle = grad;
-                ctx.beginPath();
-                ctx.roundRect(x, y, barW, barH, 4);
-                ctx.fill();
-
-                // Label
-                ctx.fillStyle = '#71717a';
-                ctx.font = '10px Outfit';
-                ctx.textAlign = 'center';
-                ctx.fillText(day.date.split('-')[2], x + barW / 2, H - 6);
-            });
-
-            document.getElementById('chart-label').innerText =
-                `${data.dailyHistory.length} day(s) tracked • Total: ${formatCurrency(data.totalRevenue)}`;
-        }
-
-        // ─── Simulate Payment ────────────────────────────────────
-        document.getElementById('sim-pay-btn').addEventListener('click', async () => {
-            const txId = document.getElementById('sim-tx-id').value.trim();
-            if (!txId) return alert('Enter a transaction ID');
-            try {
-                const res = await fetch(`${BACKEND_URL}/api/simulate-payment-success`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ transactionId: txId })
-                });
-                const data = await res.json();
-                alert(data.message || data.error);
-                loadStats();
-            } catch (err) { alert('Failed: ' + err.message); }
-        });
-
-        // ─── Frame Management ────────────────────────────────────
-        async function loadFrames() {
-            try {
-                const res = await fetch(`${BACKEND_URL}/api/frames`);
-                const frames = await res.json();
-                renderFrameList(frames);
-            } catch (err) {
-                document.getElementById('frame-list').innerHTML = '<p class="text-red-400 col-span-4 text-center py-8">Failed to load frames</p>';
-            }
-        }
-
-        async function renderFrameList(frames) {
-            const grid = document.getElementById('frame-list');
-            grid.innerHTML = '';
-
-            for (const frame of frames) {
-                const card = document.createElement('div');
-                card.className = 'bg-zinc-950 border border-zinc-800 rounded-xl p-4 flex flex-col items-center';
-
-                card.innerHTML = `
-                    <canvas class="rounded-lg mb-3 w-full" data-fcanvas></canvas>
-                    <div class="w-full">
-                        <div class="flex items-center justify-between mb-1">
-                            <span class="font-bold text-sm">${frame.name}</span>
-                            ${frame.isDefault
-                                ? '<span class="text-[10px] bg-zinc-800 px-2 py-0.5 rounded-full text-zinc-400">DEFAULT</span>'
-                                : '<span class="text-[10px] bg-purple-500/20 px-2 py-0.5 rounded-full text-purple-400 font-bold">CUSTOM</span>'}
-                        </div>
-                        <p class="text-xs text-zinc-500 mb-3">${frame.subtitle} • ${frame.filter !== 'none' ? frame.filter : 'no filter'} • ${frame.decorations !== 'none' ? frame.decorations : 'no deco'}</p>
-                        <div class="flex gap-2">
-                            <div class="w-5 h-5 rounded border border-zinc-700" style="background:${frame.bgColor}" title="BG"></div>
-                            <div class="w-5 h-5 rounded border border-zinc-700" style="background:${frame.photoBorder}" title="Border"></div>
-                            <div class="w-5 h-5 rounded border border-zinc-700" style="background:${frame.accentColor}" title="Accent"></div>
-                            <div class="flex-1"></div>
-                            ${!frame.isDefault ? `<button class="text-xs text-red-400 hover:text-red-300 transition-colors font-medium" onclick="deleteFrameAction('${frame.id}')">Delete</button>` : ''}
-                        </div>
+    <!-- MODAL: Frame Editor -->
+    <div id="frame-modal" class="modal-backdrop hidden">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3 id="modal-title">Buat Template Baru</h3>
+                <button class="modal-close" id="close-modal">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-sidebar">
+                    <div><label class="form-label">Upload Frame PNG</label><input type="file" id="f-image" accept="image/png" class="form-input"></div>
+                    <div><label class="form-label">Nama Frame</label><input type="text" id="f-name" placeholder="e.g. Wedding Floral" class="form-input"></div>
+                    <div><label class="form-label">Tipe Paket</label><select id="f-package" class="form-input"><option value="basic">Paket 1: Strip</option><option value="premium">Paket 2: 4R Penuh</option></select></div>
+                    <div><label class="form-label">Koordinat Blok</label><div id="coord-readout" class="readout-box">Upload gambar untuk memulai.</div></div>
+                    <div style="display:flex;flex-direction:column;gap:8px;">
+                        <button id="add-block-btn" class="btn-tool btn-tool-add">＋ Tambah Blok Foto</button>
+                        <button id="remove-block-btn" class="btn-tool btn-tool-remove">− Hapus Blok Terakhir</button>
+                        <button id="reset-layout-btn" class="btn-tool btn-tool-reset">↻ Reset Layout</button>
                     </div>
-                `;
+                </div>
+                <div class="modal-canvas">
+                    <div id="editor-container" class="editor-wrap">
+                        <p id="empty-state" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--text3);font-weight:600;font-size:14px;">Upload Frame PNG untuk memulai</p>
+                        <img id="overlay-preview" src="" class="hidden" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:20;pointer-events:none;">
+                        <div id="drag-zone" class="hidden" style="position:absolute;inset:0;z-index:30;"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-ghost" id="cancel-modal">Batal</button>
+                <button class="btn btn-primary" id="save-frame-btn">💾 Simpan Template</button>
+            </div>
+        </div>
+    </div>
 
-                grid.appendChild(card);
-
-                // Render preview
-                const canvas = card.querySelector('[data-fcanvas]');
-                const placeholders = [null, null, null];
-                await StripRenderer.render(canvas, placeholders, frame, 'basic');
-            }
-        }
-
-        async function deleteFrameAction(frameId) {
-            if (!confirm('Delete this custom frame?')) return;
-            try {
-                await fetch(`${BACKEND_URL}/api/admin/frames/${frameId}`, { method: 'DELETE' });
-                loadFrames();
-                loadStats();
-            } catch (err) { alert('Failed: ' + err.message); }
-        }
-        window.deleteFrameAction = deleteFrameAction;
-
-        // ─── Frame Modal ─────────────────────────────────────────
-        const modal = document.getElementById('frame-modal');
-
-        document.getElementById('add-frame-btn').addEventListener('click', () => {
-            modal.classList.remove('hidden');
-            updateModalPreview();
-        });
-        document.getElementById('close-modal').addEventListener('click', () => modal.classList.add('hidden'));
-        document.getElementById('cancel-modal').addEventListener('click', () => modal.classList.add('hidden'));
-
-        // Sync color pickers with text inputs
-        ['bgColor', 'photoBorder', 'textColor', 'accentColor'].forEach(field => {
-            const picker = document.getElementById(`f-${field}`);
-            const text = document.getElementById(`f-${field}-text`);
-            picker.addEventListener('input', () => { text.value = picker.value; updateModalPreview(); });
-            text.addEventListener('input', () => { picker.value = text.value; updateModalPreview(); });
-        });
-
-        // Sync sliders
-        document.getElementById('f-borderWidth').addEventListener('input', (e) => {
-            document.getElementById('f-borderWidth-val').innerText = e.target.value + 'px';
-            updateModalPreview();
-        });
-        document.getElementById('f-photoRadius').addEventListener('input', (e) => {
-            document.getElementById('f-photoRadius-val').innerText = e.target.value + 'px';
-            updateModalPreview();
-        });
-
-        // Other fields trigger preview update
-        ['f-footerText', 'f-filter', 'f-decorations', 'f-name'].forEach(id => {
-            document.getElementById(id).addEventListener('input', updateModalPreview);
-        });
-
-        document.getElementById('preview-update-btn').addEventListener('click', updateModalPreview);
-
-        function getFormData() {
-            return {
-                name: document.getElementById('f-name').value || 'Untitled',
-                subtitle: document.getElementById('f-subtitle').value || 'Custom',
-                bgColor: document.getElementById('f-bgColor').value,
-                photoBorder: document.getElementById('f-photoBorder').value,
-                photoBorderWidth: parseInt(document.getElementById('f-borderWidth').value),
-                photoRadius: parseInt(document.getElementById('f-photoRadius').value),
-                textColor: document.getElementById('f-textColor').value,
-                footerText: document.getElementById('f-footerText').value || 'Photobox Studio',
-                accentColor: document.getElementById('f-accentColor').value,
-                filter: document.getElementById('f-filter').value,
-                decorations: document.getElementById('f-decorations').value
-            };
-        }
-
-        async function updateModalPreview() {
-            const frameData = getFormData();
-            const canvas = document.getElementById('modal-preview-canvas');
-            const placeholders = [null, null, null];
-            await StripRenderer.render(canvas, placeholders, frameData, 'basic');
-        }
-
-        // Save Frame
-        document.getElementById('save-frame-btn').addEventListener('click', async () => {
-            const frameData = getFormData();
-            if (!frameData.name || frameData.name === 'Untitled') {
-                alert('Please enter a frame name');
-                return;
-            }
-            try {
-                const res = await fetch(`${BACKEND_URL}/api/admin/frames`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(frameData)
-                });
-                const data = await res.json();
-                if (data.error) {
-                    alert(data.error);
-                    return;
-                }
-                modal.classList.add('hidden');
-                loadFrames();
-                loadStats();
-                // Reset form
-                document.getElementById('f-name').value = '';
-                document.getElementById('f-subtitle').value = '';
-            } catch (err) { alert('Failed to save: ' + err.message); }
-        });
-
-        // ─── Uptime & Refresh ────────────────────────────────────
-        setInterval(() => {
-            const s = Math.floor((Date.now() - startTime) / 1000);
-            const m = Math.floor(s / 60);
-            document.getElementById('uptime').innerText = `${m}m ${s % 60}s`;
-        }, 1000);
-
-        document.getElementById('refresh-btn').addEventListener('click', () => { loadStats(); loadFrames(); });
-        setInterval(loadStats, 5000);
-
-        // ─── Init ────────────────────────────────────────────────
-        loadStats();
-        loadFrames();
-    </script>
-
-    <style is:global>
-        body {
-            user-select: auto !important;
-            -webkit-user-select: auto !important;
-        }
-    </style>
-</Layout>
+    </div><!-- /admin-app -->
+    <script is:inline src="/js/admin-panel.js"></script>
+</body>
+</html>

@@ -67,10 +67,13 @@ import Layout from '../layouts/Layout.astro';
 
         async function triggerPrint() {
             try {
+                const pkg = localStorage.getItem('selectedPackage') || 'basic';
+                const copiesCount = pkg === 'premium' ? 2 : 1;
+
                 const res = await fetch(`${BACKEND_URL}/api/hardware/printer/trigger`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ shouldFail: false })
+                    body: JSON.stringify({ shouldFail: false, copies: copiesCount })
                 });
                 const data = await res.json();
                 return data.success;

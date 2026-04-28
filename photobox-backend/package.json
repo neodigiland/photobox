@@ -10,9 +10,13 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1038.0",
     "@supabase/supabase-js": "^2.103.0",
     "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
     "express": "^5.2.1",
+    "gifenc": "^1.0.3",
+    "jimp": "^1.6.1",
     "node-cron": "^4.2.1",
     "qrcode": "^1.5.4",
     "ws": "^8.20.0"

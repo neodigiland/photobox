@@ -35,39 +35,48 @@ const { title, hideOverflow = true } = Astro.props;
             window.PhotoboxSound = {
                 _ctx: null,
                 _getCtx() {
-                    if (!this._ctx) this._ctx = new (window.AudioContext || window.webkitAudioContext)();
-                    return this._ctx;
+                    try {
+                        if (!this._ctx) this._ctx = new (window.AudioContext || window.webkitAudioContext)();
+                        return this._ctx;
+                    } catch (e) {
+                        return null; // Audio blocked by browser
+                    }
                 },
                 beep(freq = 880, duration = 0.15, vol = 0.3) {
                     const ctx = this._getCtx();
-                    const osc = ctx.createOscillator();
-                    const gain = ctx.createGain();
-                    osc.connect(gain);
-                    gain.connect(ctx.destination);
-                    osc.frequency.value = freq;
-                    osc.type = 'sine';
-                    gain.gain.setValueAtTime(vol, ctx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
-                    osc.start(ctx.currentTime);
-                    osc.stop(ctx.currentTime + duration);
+                    if (!ctx) return;
+                    try {
+                        const osc = ctx.createOscillator();
+                        const gain = ctx.createGain();
+                        osc.connect(gain);
+                        gain.connect(ctx.destination);
+                        osc.frequency.value = freq;
+                        osc.type = 'sine';
+                        gain.gain.setValueAtTime(vol, ctx.currentTime);
+                        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+                        osc.start(ctx.currentTime);
+                        osc.stop(ctx.currentTime + duration);
+                    } catch(e) {}
                 },
                 countdownTick() { this.beep(660, 0.1, 0.25); },
                 countdownFinal() { this.beep(1200, 0.3, 0.4); },
                 shutter() {
-                    // White noise burst for shutter
                     const ctx = this._getCtx();
-                    const bufferSize = ctx.sampleRate * 0.08;
-                    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-                    const data = buffer.getChannelData(0);
-                    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
-                    const noise = ctx.createBufferSource();
-                    noise.buffer = buffer;
-                    const gain = ctx.createGain();
-                    gain.gain.setValueAtTime(0.3, ctx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.08);
-                    noise.connect(gain);
-                    gain.connect(ctx.destination);
-                    noise.start();
+                    if (!ctx) return;
+                    try {
+                        const bufferSize = ctx.sampleRate * 0.08;
+                        const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+                        const data = buffer.getChannelData(0);
+                        for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+                        const noise = ctx.createBufferSource();
+                        noise.buffer = buffer;
+                        const gain = ctx.createGain();
+                        gain.gain.setValueAtTime(0.3, ctx.currentTime);
+                        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.08);
+                        noise.connect(gain);
+                        gain.connect(ctx.destination);
+                        noise.start();
+                    } catch(e) {}
                 },
                 success() { this.beep(523, 0.1, 0.2); setTimeout(() => this.beep(659, 0.1, 0.2), 120); setTimeout(() => this.beep(784, 0.2, 0.3), 240); },
                 error() { this.beep(200, 0.3, 0.3); setTimeout(() => this.beep(150, 0.4, 0.3), 300); },

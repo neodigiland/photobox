@@ -2,142 +2,516 @@
 import Layout from '../layouts/Layout.astro';
 ---
 
-<Layout title="Select Frame" hideOverflow={false}>
-    <div class="min-h-screen w-full flex flex-col items-center justify-start pt-6 pb-12 relative">
-        <a href="/select-package" class="absolute top-0 left-0 p-4 text-zinc-500 hover:text-white transition-colors flex items-center gap-2 text-lg font-medium z-20">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
-            </svg>
-            Back
-        </a>
+<Layout title="Select Frame" hideOverflow={true}>
+    <div class="h-full w-full flex relative select-none" id="frame-page">
+        
+        <!-- LEFT SIDE: Frame Grid -->
+        <div class="frame-left">
+            <!-- Back Button -->
+            <a href="/select-package" class="back-link">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+                </svg>
+                Back
+            </a>
 
-        <div class="text-center mb-6 z-10 mt-8">
-            <h1 class="text-4xl font-bold mb-2">Pick Your Frame</h1>
-            <p class="text-lg text-zinc-400">This is exactly how your print will look</p>
+            <!-- Header -->
+            <div class="left-header">
+                <h1>Pick Your Frame</h1>
+                <p>Pilih desain frame untuk foto kamu</p>
+            </div>
+
+            <!-- Loading State -->
+            <div id="loading-frames" class="loading-wrap">
+                <svg class="animate-spin h-10 w-10 text-purple-500 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <p style="color:#71717a;font-weight:500;">Loading premium designs...</p>
+            </div>
+
+            <!-- Frame Grid (scrollable) -->
+            <div class="frame-grid-scroll hidden" id="grid-scroll-area">
+                <div class="frame-grid" id="dynamic-frame-grid">
+                    <!-- Dynamic frames injected here -->
+                </div>
+            </div>
         </div>
 
-        <!-- Loading state -->
-        <div id="loading-frames" class="flex items-center gap-3 text-zinc-400 py-20 z-10">
-            <svg class="animate-spin h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            Loading frames...
+        <!-- RIGHT SIDE: Preview + Button -->
+        <div class="frame-right">
+            <!-- Empty Preview State -->
+            <div class="preview-area" id="preview-area">
+                <div class="preview-empty" id="preview-empty">
+                    <div class="preview-empty-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-zinc-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.41a2.25 2.25 0 013.182 0l2.909 2.91M3.75 21h16.5a2.25 2.25 0 002.25-2.25V5.25a2.25 2.25 0 00-2.25-2.25H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z" />
+                        </svg>
+                    </div>
+                    <h3>Preview Frame</h3>
+                    <p>Pilih frame di sebelah kiri untuk melihat preview</p>
+                </div>
+
+                <!-- Active Preview (hidden by default) -->
+                <div class="preview-active hidden" id="preview-active">
+                    <div class="preview-frame-wrap" id="preview-frame-wrap">
+                        <img id="preview-img" src="" alt="Frame Preview" />
+                        <!-- Layout blocks overlay for preview -->
+                        <div class="preview-blocks" id="preview-blocks"></div>
+                    </div>
+                    <div class="preview-name" id="preview-name"></div>
+                </div>
+            </div>
+
+            <!-- CTA Button -->
+            <button id="confirm-btn" class="cta-button cta-disabled" disabled>
+                <span>Pilih Frame Dulu</span>
+            </button>
         </div>
 
-        <!-- Frame cards -->
-        <div class="hidden flex-wrap gap-5 w-full max-w-6xl px-6 z-10 justify-center" id="frame-grid">
-            <!-- Populated dynamically -->
-        </div>
-
-        <!-- Confirm Button -->
-        <button id="confirm-btn" class="mt-8 px-12 py-4 bg-zinc-800 text-zinc-500 font-bold text-xl rounded-full cursor-not-allowed transition-all duration-300 z-10" disabled>
-            Select a Frame to Continue
-        </button>
     </div>
 
+    <!-- Fallback Renderer for Legacy Frames -->
     <script src="/js/strip-renderer.js" is:inline></script>
+    
     <script is:inline>
         const BACKEND_URL = 'http://localhost:3000';
         const selectedPackage = localStorage.getItem('selectedPackage') || 'basic';
-        const totalPhotos = selectedPackage === 'premium' ? 4 : 3;
         let selectedFrameId = null;
-        const confirmBtn = document.getElementById('confirm-btn');
+        let allFrames = [];
 
         async function loadFrames() {
             try {
                 const res = await fetch(`${BACKEND_URL}/api/frames`);
-                const frames = await res.json();
-                renderFrameCards(frames);
-            } catch (err) {
-                console.error('Failed to load frames:', err);
-                document.getElementById('loading-frames').innerHTML = '<p class="text-red-400">Failed to load frames. Is the backend running?</p>';
-            }
-        }
+                if (!res.ok) throw new Error('API down');
+                allFrames = await res.json();
+                
+                document.getElementById('loading-frames').classList.add('hidden');
+                document.getElementById('grid-scroll-area').classList.remove('hidden');
+                
+                const grid = document.getElementById('dynamic-frame-grid');
 
-        async function renderFrameCards(frames) {
-            const grid = document.getElementById('frame-grid');
-            grid.innerHTML = '';
-            grid.style.display = 'flex';
-            document.getElementById('loading-frames').style.display = 'none';
-
-            for (const frame of frames) {
-                const card = document.createElement('div');
-                card.className = 'frame-card group cursor-pointer select-none';
-                card.dataset.frameId = frame.id;
-                card.style.width = '220px';
-
-                card.innerHTML = `
-                    <div class="relative bg-zinc-900 border-2 border-zinc-800 rounded-2xl p-4 transition-all duration-300 group-hover:border-purple-500/50 group-hover:-translate-y-1 group-hover:shadow-[0_10px_30px_rgba(168,85,247,0.15)] flex flex-col items-center h-full" data-inner>
-                        <div class="w-full flex items-center justify-center mb-3 overflow-hidden rounded-lg" style="max-height: 320px;">
-                            <canvas data-canvas class="rounded-lg shadow-lg"></canvas>
-                        </div>
-                        <span class="font-semibold text-base">${frame.name}</span>
-                        <span class="text-xs text-zinc-500 mb-1">${frame.subtitle}</span>
-                        ${!frame.isDefault ? '<span class="text-[10px] text-purple-400 font-bold">CUSTOM</span>' : ''}
-                        <div class="absolute top-3 right-3 w-6 h-6 rounded-full border-2 border-zinc-700 flex items-center justify-center transition-all" data-check></div>
-                    </div>
-                `;
-
-                grid.appendChild(card);
-
-                // Render preview on canvas at a smaller scale
-                const canvas = card.querySelector('[data-canvas]');
-                const placeholders = new Array(totalPhotos).fill(null);
-                await StripRenderer.render(canvas, placeholders, frame, selectedPackage);
-
-                // Scale canvas down to fit card — override the inline styles set by renderer
-                const originalW = parseInt(canvas.style.width);
-                const originalH = parseInt(canvas.style.height);
-                const maxH = 300;
-                if (originalH > maxH) {
-                    const scale = maxH / originalH;
-                    canvas.style.width = Math.round(originalW * scale) + 'px';
-                    canvas.style.height = Math.round(originalH * scale) + 'px';
+                const packageFrames = allFrames.filter(f => (f.packageType || 'basic') === selectedPackage);
+                
+                if (packageFrames.length === 0) {
+                     grid.innerHTML = '<p style="color:#71717a;text-align:center;padding:40px;grid-column:1/-1;">No frames available for this package.</p>';
+                     return;
                 }
 
-                // Click handler
-                card.addEventListener('click', () => selectFrame(frame.id, card));
+                for (const frame of packageFrames) {
+                    const card = document.createElement('div');
+                    card.className = 'frame-thumb';
+                    card.onclick = () => selectFrame(frame.id);
+                    card.id = `card-${frame.id}`;
+
+                    const isDynamic = !!frame.overlay;
+                    const missingSvg = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiMzZjNmNDYiLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTZweCIgZmlsbD0iI2EyYTJhMiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPlByZXZpZXcgTWlzc2luZzwvdGV4dD48L3N2Zz4=';
+
+                    if (isDynamic) {
+                        let blocksHtml = '';
+                        if (frame.layout && Array.isArray(frame.layout)) {
+                            frame.layout.forEach(b => {
+                                blocksHtml += `<div style="position:absolute;top:${b.y}%;left:${b.x}%;width:${b.w}%;height:${b.h}%;background:rgba(63,63,70,0.5);display:flex;align-items:center;justify-content:center;"><span style="color:#a1a1aa;font-weight:900;font-size:10px;">${b.id}</span></div>`;
+                            });
+                        }
+
+                        card.innerHTML = `
+                            <div class="thumb-inner">
+                                <div style="position:absolute;inset:0;z-index:0;">${blocksHtml}</div>
+                                <img src="${frame.overlay}" alt="${frame.name}" class="thumb-overlay" onerror="this.src='${missingSvg}'" />
+                                <div class="thumb-check" id="check-${frame.id}">
+                                    <svg style="width:16px;height:16px;color:white;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                                </div>
+                            </div>
+                            <div class="thumb-name">${frame.name}</div>
+                        `;
+                        grid.appendChild(card);
+                    } else {
+                        card.innerHTML = `
+                            <div class="thumb-inner">
+                                <canvas style="width:100%;height:100%;object-fit:contain;" id="legacy-canvas-${frame.id}"></canvas>
+                                <div class="thumb-check" id="check-${frame.id}">
+                                    <svg style="width:16px;height:16px;color:white;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                                </div>
+                            </div>
+                            <div class="thumb-name">${frame.name}</div>
+                        `;
+                        grid.appendChild(card);
+                        
+                        const canvas = document.getElementById(`legacy-canvas-${frame.id}`);
+                        const totalPhotos = selectedPackage === 'premium' ? 4 : 3;
+                        const placeholders = new Array(totalPhotos).fill(null);
+                        await StripRenderer.render(canvas, placeholders, frame, selectedPackage);
+                    }
+                }
+            } catch (err) {
+                console.error("Frame Failed:", err);
+                document.getElementById('loading-frames').innerHTML = `<p style="color:#ef4444;font-weight:700;">Failed to connect to Local Admin System</p>`;
             }
         }
 
-        function selectFrame(frameId, card) {
-            window.PhotoboxSound.beep(550, 0.08, 0.15);
-
-            // Deselect all
-            document.querySelectorAll('.frame-card').forEach(c => {
-                const inner = c.querySelector('[data-inner]');
-                inner.classList.remove('border-purple-500', 'ring-2', 'ring-purple-500/30', 'shadow-[0_10px_30px_rgba(168,85,247,0.25)]');
-                const check = c.querySelector('[data-check]');
-                check.innerHTML = '';
-                check.classList.remove('border-purple-500', 'bg-purple-500');
-                check.classList.add('border-zinc-700');
+        function selectFrame(id) {
+            if (window.PhotoboxSound) window.PhotoboxSound.beep(550, 0.08, 0.15);
+            
+            // Remove active from all thumbs
+            document.querySelectorAll('.frame-thumb').forEach(c => {
+                c.classList.remove('thumb-selected');
+            });
+            document.querySelectorAll('.thumb-check').forEach(ck => {
+                ck.classList.remove('check-visible');
             });
 
-            // Select this one
-            selectedFrameId = frameId;
-            const inner = card.querySelector('[data-inner]');
-            inner.classList.add('border-purple-500', 'ring-2', 'ring-purple-500/30', 'shadow-[0_10px_30px_rgba(168,85,247,0.25)]');
-            const check = card.querySelector('[data-check]');
-            check.classList.remove('border-zinc-700');
-            check.classList.add('border-purple-500', 'bg-purple-500');
-            check.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-white" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-            </svg>`;
+            // Apply selected
+            selectedFrameId = id;
+            localStorage.setItem('selectedFrame', selectedFrameId);
+            
+            const newCard = document.getElementById(`card-${selectedFrameId}`);
+            if (newCard) {
+                newCard.classList.add('thumb-selected');
+                const ck = document.getElementById(`check-${selectedFrameId}`);
+                if (ck) ck.classList.add('check-visible');
+            }
 
-            // Enable button
-            confirmBtn.disabled = false;
-            confirmBtn.className = 'mt-8 px-12 py-4 bg-gradient-to-r from-purple-600 to-fuchsia-600 text-white font-bold text-xl rounded-full cursor-pointer transition-all duration-300 z-10 hover:scale-105 active:scale-95 shadow-[0_0_30px_rgba(168,85,247,0.3)]';
-            confirmBtn.innerText = 'Continue to Payment →';
+            // Update right-side preview
+            const frame = allFrames.find(f => f.id === id);
+            if (frame) {
+                document.getElementById('preview-empty').classList.add('hidden');
+                const previewActive = document.getElementById('preview-active');
+                previewActive.classList.remove('hidden');
+
+                // Show overlay image
+                const previewImg = document.getElementById('preview-img');
+                if (frame.overlay) {
+                    previewImg.src = frame.overlay;
+                    previewImg.style.display = 'block';
+                } else {
+                    previewImg.style.display = 'none';
+                }
+
+                // Show layout blocks in preview
+                const blocksEl = document.getElementById('preview-blocks');
+                blocksEl.innerHTML = '';
+                if (frame.layout && Array.isArray(frame.layout)) {
+                    frame.layout.forEach(b => {
+                        const div = document.createElement('div');
+                        div.className = 'preview-block';
+                        div.style.cssText = `top:${b.y}%;left:${b.x}%;width:${b.w}%;height:${b.h}%;`;
+                        div.innerHTML = `<span>${b.id}</span>`;
+                        blocksEl.appendChild(div);
+                    });
+                }
+
+                document.getElementById('preview-name').textContent = frame.name;
+            }
+
+            // Enable Continue button
+            const btn = document.getElementById('confirm-btn');
+            btn.disabled = false;
+            btn.className = 'cta-button cta-active';
+            btn.innerHTML = `<span>Continue to Camera</span><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>`;
         }
 
-        confirmBtn.addEventListener('click', () => {
+        document.getElementById('confirm-btn').addEventListener('click', () => {
             if (!selectedFrameId) return;
-            window.PhotoboxSound.beep(880, 0.1, 0.2);
-            localStorage.setItem('selectedFrame', selectedFrameId);
-            window.location.href = '/payment';
+            if (window.PhotoboxSound) window.PhotoboxSound.beep(880, 0.1, 0.2);
+            window.location.href = '/camera';
         });
 
         loadFrames();
     </script>
 </Layout>
+
+<style is:global>
+    #frame-page {
+        display: flex;
+        height: 100vh;
+        width: 100vw;
+        gap: 0;
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 10;
+    }
+
+    /* ── LEFT PANEL ──────────────────────────────── */
+    .frame-left {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        padding: 16px 20px;
+        background: rgba(9, 9, 11, 0.95);
+        border-right: 1px solid rgba(63, 63, 70, 0.3);
+        overflow: hidden;
+        min-width: 0;
+    }
+
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: #71717a;
+        font-size: 14px;
+        font-weight: 500;
+        text-decoration: none;
+        transition: color 0.2s;
+        margin-bottom: 12px;
+    }
+    .back-link:hover { color: #e4e4e7; }
+
+    .left-header {
+        margin-bottom: 16px;
+    }
+    .left-header h1 {
+        font-size: 28px;
+        font-weight: 800;
+        background: linear-gradient(to right, #93c5fd, #a78bfa, #e879f9);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 4px;
+    }
+    .left-header p {
+        font-size: 14px;
+        color: #71717a;
+    }
+
+    .loading-wrap {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* Scrollable frame grid */
+    .frame-grid-scroll {
+        flex: 1;
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding-right: 8px;
+    }
+    .frame-grid-scroll::-webkit-scrollbar { width: 4px; }
+    .frame-grid-scroll::-webkit-scrollbar-track { background: transparent; }
+    .frame-grid-scroll::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 4px; }
+
+    .frame-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+        padding-bottom: 16px;
+    }
+
+    /* ── FRAME THUMBNAIL ─────────────────────────── */
+    .frame-thumb {
+        cursor: pointer;
+        border-radius: 10px;
+        overflow: hidden;
+        border: 2px solid #27272a;
+        transition: all 0.25s ease;
+        background: #18181b;
+    }
+    .frame-thumb:hover {
+        border-color: #52525b;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+    }
+    .frame-thumb.thumb-selected {
+        border-color: #a855f7;
+        box-shadow: 0 0 16px rgba(168,85,247,0.4);
+        transform: scale(1.03);
+    }
+
+    .thumb-inner {
+        position: relative;
+        aspect-ratio: 2/3;
+        background: #18181b;
+        overflow: hidden;
+    }
+    .thumb-overlay {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        position: absolute;
+        inset: 0;
+        z-index: 10;
+        pointer-events: none;
+    }
+    .thumb-name {
+        padding: 6px 8px;
+        font-size: 11px;
+        font-weight: 600;
+        text-align: center;
+        color: #a1a1aa;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        background: #18181b;
+    }
+    .thumb-selected .thumb-name {
+        color: #c084fc;
+    }
+
+    .thumb-check {
+        position: absolute;
+        top: 6px;
+        right: 6px;
+        width: 26px;
+        height: 26px;
+        background: #a855f7;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 30;
+        opacity: 0;
+        transform: scale(0.5);
+        transition: all 0.25s ease;
+        box-shadow: 0 2px 8px rgba(168,85,247,0.5);
+    }
+    .thumb-check.check-visible {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    /* ── RIGHT PANEL ─────────────────────────────── */
+    .frame-right {
+        width: 380px;
+        min-width: 340px;
+        display: flex;
+        flex-direction: column;
+        padding: 24px;
+        background: rgba(14, 14, 16, 0.95);
+        position: relative;
+    }
+
+    .preview-area {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+    }
+
+    /* Empty state */
+    .preview-empty {
+        text-align: center;
+    }
+    .preview-empty-icon {
+        width: 100px;
+        height: 100px;
+        border-radius: 24px;
+        background: rgba(39, 39, 42, 0.5);
+        border: 2px dashed #3f3f46;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+    }
+    .preview-empty h3 {
+        font-size: 20px;
+        font-weight: 700;
+        color: #52525b;
+        margin-bottom: 6px;
+    }
+    .preview-empty p {
+        font-size: 13px;
+        color: #3f3f46;
+    }
+
+    /* Active preview */
+    .preview-active {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+        animation: fadeIn 0.3s ease;
+    }
+
+    .preview-frame-wrap {
+        position: relative;
+        width: 100%;
+        max-width: 340px;
+        aspect-ratio: 2/3;
+        background: #18181b;
+        border-radius: 16px;
+        overflow: hidden;
+        border: 2px solid #3f3f46;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.4), 0 0 40px rgba(168,85,247,0.08);
+    }
+    .preview-frame-wrap img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        position: absolute;
+        inset: 0;
+        z-index: 10;
+    }
+    .preview-blocks {
+        position: absolute;
+        inset: 0;
+        z-index: 5;
+    }
+    .preview-block {
+        position: absolute;
+        background: rgba(63, 63, 70, 0.5);
+        border: 2px dashed rgba(161, 161, 170, 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 4px;
+    }
+    .preview-block span {
+        font-size: 28px;
+        font-weight: 900;
+        color: rgba(161, 161, 170, 0.5);
+    }
+
+    .preview-name {
+        margin-top: 16px;
+        font-size: 18px;
+        font-weight: 700;
+        color: #e4e4e7;
+        text-align: center;
+    }
+
+    /* ── CTA BUTTON ──────────────────────────────── */
+    .cta-button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        width: 100%;
+        padding: 18px 24px;
+        border-radius: 16px;
+        font-size: 18px;
+        font-weight: 700;
+        border: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-top: 20px;
+    }
+    .cta-disabled {
+        background: #27272a;
+        color: #52525b;
+        cursor: not-allowed;
+    }
+    .cta-active {
+        background: linear-gradient(135deg, #9333ea, #d946ef);
+        color: white;
+        box-shadow: 0 8px 30px rgba(168, 85, 247, 0.35);
+    }
+    .cta-active:hover {
+        transform: scale(1.02);
+        box-shadow: 0 12px 40px rgba(168, 85, 247, 0.5);
+    }
+    .cta-active:active {
+        transform: scale(0.98);
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(12px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .hidden { display: none !important; }
+</style>

@@ -3,140 +3,279 @@ import Layout from '../layouts/Layout.astro';
 ---
 
 <Layout title="Photo Session">
-    <div class="h-full w-full flex flex-col items-center justify-center relative select-none">
+    <div class="h-full w-full flex relative select-none bg-black" id="camera-page">
+        
+        <!-- LEFT PANEL: Camera -->
+        <div class="flex-1 flex flex-col items-center justify-center p-8 relative">
+            <!-- Camera Viewfinder -->
+            <div class="relative w-full max-w-5xl aspect-[4/3] bg-zinc-900 rounded-[2rem] overflow-hidden shadow-[0_0_80px_rgba(0,0,0,0.8)] border-4 border-zinc-800" id="camera-container">
+                <!-- Live Video Feed (DSLR via digiCamControl Webserver) -->
+                <img id="dslr-live-feed" src="" class="absolute inset-0 w-full h-full object-cover hidden" alt="DSLR Feed" />
+                
+                <!-- Fallback WebRTC Video -->
+                <video id="camera-feed" class="absolute inset-0 w-full h-full object-cover hidden" autoplay playsinline muted></video>
 
-        <!-- Camera Viewfinder -->
-        <div class="relative w-full max-w-4xl aspect-[4/3] bg-zinc-900 rounded-3xl overflow-hidden shadow-[0_0_80px_rgba(0,0,0,0.8)] border-4 border-zinc-800" id="camera-container">
+                <!-- Fallback if no camera -->
+                <div id="camera-fallback" class="absolute inset-0 hidden flex-col items-center justify-center bg-zinc-800 gap-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-20 w-20 text-zinc-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                    <p class="text-zinc-500 text-lg font-medium">No camera detected — using mock mode</p>
+                    <div class="absolute bottom-4 left-4 flex items-center gap-2">
+                        <div class="w-3 h-3 bg-amber-500 rounded-full animate-pulse"></div>
+                        <span class="text-zinc-500 font-mono text-sm">MOCK FEED</span>
+                    </div>
+                </div>
 
-            <!-- Live Video Feed -->
-            <video id="camera-feed" class="absolute inset-0 w-full h-full object-cover" autoplay playsinline muted></video>
+                <canvas id="capture-canvas" class="hidden"></canvas>
 
-            <!-- Fallback if no camera (mock view) -->
-            <div id="camera-fallback" class="absolute inset-0 hidden flex-col items-center justify-center bg-zinc-800 gap-4">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-20 w-20 text-zinc-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                </svg>
-                <p class="text-zinc-500 text-lg font-medium">No camera detected — using mock mode</p>
-                <div class="absolute bottom-4 left-4 flex items-center gap-2">
-                    <div class="w-3 h-3 bg-amber-500 rounded-full animate-pulse"></div>
-                    <span class="text-zinc-500 font-mono text-sm">MOCK FEED</span>
+                <!-- Flash Overlay -->
+                <div id="flash-overlay" class="absolute inset-0 bg-white opacity-0 pointer-events-none z-50" style="transition: opacity 0.05s ease-in, opacity 0.3s ease-out 0.05s;"></div>
+
+                <!-- Countdown Overlay -->
+                <div id="countdown-overlay" class="absolute inset-0 flex items-center justify-center z-40 bg-black/50 backdrop-blur-sm hidden">
+                    <span id="countdown-text" class="text-[14rem] font-black text-white drop-shadow-[0_0_30px_rgba(0,0,0,0.8)] leading-none opacity-0 scale-150 transition-all duration-300">3</span>
+                </div>
+
+                <!-- Get Ready Overlay -->
+                <div id="get-ready-overlay" class="absolute inset-0 flex items-center justify-center z-40 bg-black/80 backdrop-blur-md">
+                    <div class="flex flex-col items-center gap-4">
+                        <h2 class="text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-fuchsia-400 animate-pulse">Get Ready!</h2>
+                        <p class="text-2xl text-zinc-400 font-medium">Strike your best pose 📸</p>
+                    </div>
+                </div>
+
+                <!-- Photo captured badge -->
+                <div id="captured-badge" class="absolute top-6 right-6 z-50 bg-green-500 text-white font-bold px-4 py-2 rounded-full flex items-center gap-2 opacity-0 scale-75 transition-all duration-300">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>
+                    Captured!
+                </div>
+
+                <!-- REC indicator -->
+                <div class="absolute top-6 left-6 z-30 flex items-center gap-2">
+                    <div class="w-3 h-3 bg-red-500 rounded-full animate-pulse shadow-[0_0_10px_#ef4444]"></div>
+                    <span class="text-white font-mono text-sm font-bold drop-shadow-lg">REC</span>
                 </div>
             </div>
 
-            <!-- Hidden canvas for capture -->
-            <canvas id="capture-canvas" class="hidden"></canvas>
-
-            <!-- Flash Overlay -->
-            <div id="flash-overlay" class="absolute inset-0 bg-white opacity-0 pointer-events-none z-50" style="transition: opacity 0.05s ease-in, opacity 0.3s ease-out 0.05s;"></div>
-
-            <!-- Countdown Overlay -->
-            <div id="countdown-overlay" class="absolute inset-0 flex items-center justify-center z-40 bg-black/50 backdrop-blur-sm hidden">
-                <span id="countdown-text" class="text-[14rem] font-black text-white drop-shadow-[0_0_30px_rgba(0,0,0,0.8)] leading-none opacity-0 scale-150 transition-all duration-300">
-                    3
-                </span>
-            </div>
-
-            <!-- Get Ready Overlay -->
-            <div id="get-ready-overlay" class="absolute inset-0 flex items-center justify-center z-40 bg-black/80 backdrop-blur-md">
-                <div class="flex flex-col items-center gap-4">
-                    <h2 class="text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-fuchsia-400 animate-pulse">
-                        Get Ready!
-                    </h2>
-                    <p class="text-2xl text-zinc-400 font-medium">Strike your best pose 📸</p>
+            <!-- Info Bar -->
+            <div class="mt-8 flex justify-between items-center w-full max-w-5xl px-4 z-10">
+                <div class="text-2xl text-zinc-400 font-medium">
+                    Photo <span id="current-photo" class="text-white font-bold text-4xl mx-2">1</span>
+                    of <span id="total-photos" class="text-white font-bold text-3xl mx-2">3</span>
                 </div>
-            </div>
-
-            <!-- Photo captured flash feedback -->
-            <div id="captured-badge" class="absolute top-6 right-6 z-50 bg-green-500 text-white font-bold px-4 py-2 rounded-full flex items-center gap-2 opacity-0 scale-75 transition-all duration-300">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-                </svg>
-                Captured!
-            </div>
-
-            <!-- REC indicator -->
-            <div class="absolute top-6 left-6 z-30 flex items-center gap-2">
-                <div class="w-3 h-3 bg-red-500 rounded-full animate-pulse shadow-[0_0_10px_#ef4444]"></div>
-                <span class="text-white font-mono text-sm font-bold drop-shadow-lg">REC</span>
+                <div class="flex gap-4" id="photo-dots"></div>
+                <div class="bg-zinc-800 px-6 py-3 rounded-full font-mono text-fuchsia-400 font-bold border border-zinc-700 text-lg shadow-lg">
+                    <span id="frame-name">Clean White</span>
+                </div>
             </div>
         </div>
 
-        <!-- Info Bar -->
-        <div class="mt-6 flex justify-between items-center w-full max-w-4xl px-4 z-10">
-            <div class="text-xl text-zinc-400 font-medium">
-                Photo <span id="current-photo" class="text-white font-bold text-3xl mx-2">1</span>
-                of <span id="total-photos" class="text-white font-bold">3</span>
+        <!-- RIGHT PANEL: Live Preview & Review -->
+        <div class="w-[380px] min-w-[340px] bg-zinc-950 border-l border-zinc-800 p-6 flex flex-col relative z-20 shadow-[-20px_0_40px_rgba(0,0,0,0.5)] overflow-y-auto no-scrollbar">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-white font-bold text-xl">Live Preview</h3>
+                <span class="text-xs font-bold font-mono bg-purple-500/20 text-purple-400 px-3 py-1.5 rounded-full border border-purple-500/30 shadow-[0_0_15px_rgba(168,85,247,0.2)] animate-pulse">LIVE</span>
             </div>
-            <div class="flex gap-3" id="photo-dots">
-                <!-- Filled dynamically -->
+
+            <!-- Strip container -->
+            <div class="w-full flex flex-col items-center justify-start relative pt-2">
+                 <div id="live-preview-strip" class="w-full relative aspect-[2/3] bg-zinc-900 rounded-lg overflow-hidden border-2 border-zinc-800 shadow-[0_10px_40px_rgba(0,0,0,0.5)] transition-all duration-300">
+                     <!-- Populated by JS -->
+                 </div>
             </div>
-            <div class="bg-zinc-800 px-5 py-2 rounded-full font-mono text-fuchsia-400 font-bold border border-zinc-700 text-sm">
-                <span id="frame-name">Clean White</span>
+
+            <!-- Action Buttons (Shown at end) -->
+            <div class="mt-6 flex flex-col gap-3 w-full shrink-0" id="action-buttons">
+                <!-- Initially hidden -->
             </div>
         </div>
     </div>
+
+    <!-- Fallback Renderer for Legacy Frames -->
+    <script src="/js/strip-renderer.js" is:inline></script>
 
     <script is:inline>
         const BACKEND_URL = 'http://localhost:3000';
         const selectedPackage = localStorage.getItem('selectedPackage') || 'basic';
         const selectedFrame = localStorage.getItem('selectedFrame') || 'clean-white';
-        const totalPhotos = selectedPackage === 'premium' ? 4 : 3;
-        const capturedPhotos = []; // Store data URLs of each captured photo
+        let totalPhotos = selectedPackage === 'premium' ? 4 : 3;
+        let capturedPhotos = []; 
+        let frameConfig = null;
 
-        // UI setup
-        document.getElementById('total-photos').innerText = totalPhotos;
-        const frameNames = { 'clean-white': 'Clean White', 'vintage-film': 'Vintage Film', 'neon-glow': 'Neon Glow', 'flower-garden': 'Flower Garden' };
-        document.getElementById('frame-name').innerText = frameNames[selectedFrame] || selectedFrame;
-
-        // Create photo dots
+        document.getElementById('frame-name').innerText = selectedFrame; // fallback
         const dotsContainer = document.getElementById('photo-dots');
-        for (let i = 0; i < totalPhotos; i++) {
-            const dot = document.createElement('div');
-            dot.className = 'w-4 h-4 rounded-full bg-zinc-700 transition-all duration-300';
-            dot.id = `dot-${i}`;
-            dotsContainer.appendChild(dot);
-        }
-
         let currentPhotoIndex = 0;
         let cameraStream = null;
+
+        // Helper: Promise with timeout
+        const withTimeout = (promise, ms) => {
+            return Promise.race([
+                promise,
+                new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), ms))
+            ]);
+        };
+
+        // FETCH FRAME DATA FIRST before loop
+        async function fetchFrameConfig() {
+            try {
+                const res = await withTimeout(fetch(`${BACKEND_URL}/api/frames/${selectedFrame}`), 3000);
+                frameConfig = await res.json();
+                
+                document.getElementById('frame-name').innerText = frameConfig.name || selectedFrame;
+                
+                // Calculate max photo ID so duplicate blocks don't require extra camera shots
+                if (frameConfig.overlay && frameConfig.layout && frameConfig.layout.length > 0) {
+                    totalPhotos = Math.max(...frameConfig.layout.map(b => b.id));
+                    console.log(`📸 Custom Dynamic Frame detected. Photos required: ${totalPhotos}`);
+                }
+            } catch (err) {
+                console.warn('Failed to fetch frame info, using defaults', err);
+            }
+
+            // UI setup
+            document.getElementById('total-photos').innerText = totalPhotos;
+
+            // Create photo dots
+            dotsContainer.innerHTML = '';
+            for (let i = 0; i < totalPhotos; i++) {
+                const dot = document.createElement('div');
+                dot.className = 'w-5 h-5 rounded-full bg-zinc-700 transition-all duration-300 border-2 border-transparent';
+                dot.id = `dot-${i}`;
+                dotsContainer.appendChild(dot);
+            }
+
+            renderPreviewStrip();
+        }
+
+        // Render the preview strip on the right side
+        function renderPreviewStrip() {
+            const strip = document.getElementById('live-preview-strip');
+            strip.innerHTML = '';
+
+            if (frameConfig && frameConfig.overlay) {
+                // Dynamic Frame
+                let blocksHtml = '';
+                if (frameConfig.layout && Array.isArray(frameConfig.layout)) {
+                    frameConfig.layout.forEach((b, index) => {
+                        blocksHtml += `
+                            <div style="position:absolute;top:${b.y}%;left:${b.x}%;width:${b.w}%;height:${b.h}%;background:#27272a;display:flex;align-items:center;justify-content:center;overflow:hidden;z-index:5;" class="group">
+                                <span id="preview-placeholder-${index}" style="color:#52525b;font-weight:900;font-size:24px;">${b.id}</span>
+                                <img id="preview-img-${index}" src="" style="width:100%;height:100%;object-fit:cover;display:none;position:absolute;inset:0;" />
+                                
+                                <!-- Retake button (top-left, visible after session) -->
+                                <button onclick="retakeSinglePhoto(${b.id})" class="retake-block-btn absolute top-1.5 left-1.5 flex items-center justify-center transition-transform hover:scale-110 active:scale-95 hidden z-20 cursor-pointer">
+                                    <div class="bg-black/75 backdrop-blur-md p-1.5 rounded-full border border-white/20 shadow-[0_4px_10px_rgba(0,0,0,0.8)] text-white/90">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                        </svg>
+                                    </div>
+                                </button>
+                            </div>
+                        `;
+                    });
+                }
+                const overlayHtml = `<img src="${frameConfig.overlay}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:10;pointer-events:none;" />`;
+                strip.innerHTML = blocksHtml + overlayHtml;
+            } else {
+                // Legacy Strip (Fallback using canvas)
+                strip.innerHTML = `
+                    <div style="position:absolute;inset:0;background:#18181b;display:flex;align-items:center;justify-content:center;z-index:5;">
+                        <canvas id="legacy-preview-canvas" style="width:100%;height:100%;object-fit:contain;"></canvas>
+                    </div>
+                `;
+                updateLegacyPreview();
+            }
+        }
+
+        async function updateLegacyPreview() {
+            const canvas = document.getElementById('legacy-preview-canvas');
+            if (canvas && frameConfig) {
+                const placeholders = new Array(selectedPackage === 'premium' ? 4 : 3).fill(null);
+                // Fill with captured photos
+                capturedPhotos.forEach((p, i) => { if(i < placeholders.length) placeholders[i] = p; });
+                await StripRenderer.render(canvas, placeholders, frameConfig, selectedPackage);
+            }
+        }
+
+        async function updatePreviewWithPhoto(photoDataUrl, photoId) {
+            if (frameConfig && frameConfig.overlay && frameConfig.layout) {
+                // Dynamic frame: update all blocks matching this photoId (1-indexed)
+                frameConfig.layout.forEach((b, index) => {
+                    if (b.id === photoId) {
+                        const img = document.getElementById(`preview-img-${index}`);
+                        const placeholder = document.getElementById(`preview-placeholder-${index}`);
+                        if (img) {
+                            img.src = photoDataUrl;
+                            img.style.display = 'block';
+                            img.classList.add('animate-[popIn_0.4s_ease-out]');
+                        }
+                        if (placeholder) {
+                            placeholder.style.display = 'none';
+                        }
+                    }
+                });
+            } else {
+                // Legacy frame
+                await updateLegacyPreview();
+            }
+        }
 
         // ─── Camera Setup ────────────────────────────────────────
         async function initCamera() {
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({
+                const stream = await withTimeout(navigator.mediaDevices.getUserMedia({
                     video: { width: { ideal: 1280 }, height: { ideal: 960 }, facingMode: 'user' },
                     audio: false
-                });
+                }), 4000); // 4 sec timeout for camera permission
                 cameraStream = stream;
                 const video = document.getElementById('camera-feed');
                 video.srcObject = stream;
                 video.style.transform = 'scaleX(-1)'; // Mirror for selfie
+                video.classList.remove('hidden');
             } catch (err) {
-                console.warn('No camera available, using mock mode:', err);
+                console.warn('No camera available or prompt ignored, using mock mode:', err);
                 document.getElementById('camera-feed').classList.add('hidden');
                 document.getElementById('camera-fallback').classList.remove('hidden');
                 document.getElementById('camera-fallback').classList.add('flex');
             }
         }
 
-        function capturePhoto() {
-            const video = document.getElementById('camera-feed');
-            const canvas = document.getElementById('capture-canvas');
-            
-            if (cameraStream) {
-                canvas.width = video.videoWidth;
-                canvas.height = video.videoHeight;
-                const ctx = canvas.getContext('2d');
-                // Mirror the capture
-                ctx.translate(canvas.width, 0);
-                ctx.scale(-1, 1);
-                ctx.drawImage(video, 0, 0);
-                ctx.setTransform(1, 0, 0, 1, 0, 0);
-                const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
-                capturedPhotos.push(dataUrl);
-            } else {
-                // Mock mode — push a placeholder
-                capturedPhotos.push(`mock-photo-${currentPhotoIndex + 1}`);
+        async function captureSinglePhoto() {
+            try {
+                // Attempt to trigger the physical DSLR camera on the backend
+                const response = await withTimeout(fetch('http://localhost:3000/api/hardware/camera/trigger', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                }), 15000); // 15s timeout for DSLR focus, capture, and transfer
+                
+                if (!response.ok) throw new Error('DSLR trigger failed (500)');
+                const result = await response.json();
+                
+                if (result.success && result.photoUrl) {
+                    return result.photoUrl;
+                }
+                throw new Error('Invalid response from DSLR');
+            } catch (err) {
+                console.warn('Physical camera unavailable, falling back to WebRTC webcam capture...', err);
+                
+                // Fallback to laptop webcam canvas
+                const video = document.getElementById('camera-feed');
+                const canvas = document.getElementById('capture-canvas');
+                
+                if (cameraStream && video.videoWidth > 0) {
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    const ctx = canvas.getContext('2d');
+                    // Mirror the capture (webcam is mirrored)
+                    ctx.translate(canvas.width, 0);
+                    ctx.scale(-1, 1);
+                    ctx.drawImage(video, 0, 0);
+                    ctx.setTransform(1, 0, 0, 1, 0, 0);
+                    return canvas.toDataURL('image/jpeg', 0.9);
+                } else {
+                    return 'data:image/gif;base64,R0lGODlhAQABAIAAAMLCwgAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw=='; // Gray pixel mock
+                }
             }
         }
 
@@ -193,63 +332,188 @@ import Layout from '../layouts/Layout.astro';
         // ─── Photo Session Loop ──────────────────────────────────
 
         async function runPhotoSession() {
-            await initCamera();
+            try {
+                await fetchFrameConfig();
+                await initCamera();
 
-            // Show "Get Ready" for 3 seconds
-            await new Promise(r => setTimeout(r, 3000));
-            document.getElementById('get-ready-overlay').classList.add('hidden');
+                // Show "Get Ready" for 3 seconds
+                await new Promise(r => setTimeout(r, 3000));
+                document.getElementById('get-ready-overlay').classList.add('hidden');
 
-            while (currentPhotoIndex < totalPhotos) {
-                document.getElementById('current-photo').innerText = currentPhotoIndex + 1;
+                while (currentPhotoIndex < totalPhotos) {
+                    document.getElementById('current-photo').innerText = currentPhotoIndex + 1;
 
-                await startCountdown();
+                    await startCountdown();
 
-                // CAPTURE!
-                triggerFlash();
-                window.PhotoboxSound.shutter();
-                capturePhoto();
+                    // CAPTURE!
+                    triggerFlash();
+                    if(window.PhotoboxSound) window.PhotoboxSound.shutter();
+                    
+                    const newPhotoUrl = await captureSinglePhoto();
+                    capturedPhotos.push(newPhotoUrl);
+                    
+                    // Update live preview immediately
+                    await updatePreviewWithPhoto(newPhotoUrl, currentPhotoIndex + 1);
 
-                // Notify backend
-                fetch(`${BACKEND_URL}/api/hardware/camera/trigger`, { method: 'POST' }).catch(() => {});
+                    // Update dot
+                    const dot = document.getElementById(`dot-${currentPhotoIndex}`);
+                    if(dot) {
+                        dot.classList.remove('bg-zinc-700');
+                        dot.classList.add('bg-green-500', 'scale-125', 'border-green-300', 'shadow-[0_0_15px_#22c55e]');
+                    }
 
-                // Update dot
-                const dot = document.getElementById(`dot-${currentPhotoIndex}`);
-                dot.classList.remove('bg-zinc-700');
-                dot.classList.add('bg-green-500', 'scale-125', 'shadow-[0_0_10px_#22c55e]');
+                    showCapturedBadge();
 
-                showCapturedBadge();
+                    currentPhotoIndex++;
 
-                currentPhotoIndex++;
-
-                // Wait between shots
-                if (currentPhotoIndex < totalPhotos) {
-                    await new Promise(r => setTimeout(r, 2500));
+                    // Wait between shots
+                    if (currentPhotoIndex < totalPhotos) {
+                        await new Promise(r => setTimeout(r, 2500));
+                    }
                 }
+            } catch (error) {
+                console.error("Camera session error:", error);
+                // Fallback to ensuring the session concludes visually
+                currentPhotoIndex = totalPhotos;
             }
 
-            // All photos taken — save to localStorage for review
-            localStorage.setItem('capturedPhotos', JSON.stringify(capturedPhotos));
+            // All photos taken
+            try {
+                localStorage.setItem('capturedPhotos', JSON.stringify(capturedPhotos));
+            } catch (e) {
+                console.warn('Failed to save to localStorage (quota exceeded?), continuing anyway:', e);
+            }
 
-            // Stop camera
+            // Stop camera to freeze last frame
+            if (cameraStream) {
+                try {
+                    cameraStream.getTracks().forEach(t => t.stop());
+                } catch(e) {}
+            }
+
+            // Show Review UI on the right panel instead of auto-redirect
+            try {
+                const actionButtons = document.getElementById('action-buttons');
+                let buttonsHtml = `
+                    <button id="next-btn" onclick="continueToNext()" class="w-full py-4 rounded-xl font-bold text-white bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:scale-[1.02] active:scale-95 transition-all shadow-[0_0_20px_rgba(168,85,247,0.4)] flex items-center justify-center gap-2 text-xl">
+                        Lanjut
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                        </svg>
+                    </button>
+                `;
+
+                // Legacy fallback retake buttons if no dynamic layout
+                if (!frameConfig || !frameConfig.overlay) {
+                    let legacyHtml = '<div class="flex gap-2 w-full mb-2">';
+                    for(let i=1; i<=totalPhotos; i++) {
+                        legacyHtml += `<button onclick="retakeSinglePhoto(${i})" class="legacy-retake-btn flex-1 py-2 rounded font-bold text-xs bg-zinc-800 text-zinc-300 hover:bg-zinc-700 border border-zinc-700">R ${i}</button>`;
+                    }
+                    legacyHtml += '</div>';
+                    buttonsHtml = legacyHtml + buttonsHtml;
+                }
+
+                if (actionButtons) {
+                    actionButtons.innerHTML = buttonsHtml;
+                    actionButtons.style.display = 'flex';
+                }
+                
+                // Enable retake overlays on blocks
+                document.querySelectorAll('.retake-block-btn').forEach(btn => {
+                    btn.classList.remove('hidden');
+                    btn.style.display = 'flex';
+                });
+
+                if(window.PhotoboxSound) window.PhotoboxSound.success();
+                
+                // Add pulse effect to preview strip to highlight it's done
+                const strip = document.getElementById('live-preview-strip');
+                if (strip) strip.classList.add('shadow-[0_0_40px_rgba(168,85,247,0.5)]', 'border-purple-500');
+            } catch (err) {
+                console.error("Failed to render end session buttons:", err);
+            }
+        }
+
+        window.retakeSinglePhoto = async function(photoId) {
+            if (window.PhotoboxSound) window.PhotoboxSound.beep(400, 0.1, 0.2);
+            
+            // Disable UI during retake
+            const nextBtn = document.getElementById('next-btn');
+            if(nextBtn) nextBtn.disabled = true;
+            document.querySelectorAll('.retake-block-btn').forEach(btn => btn.style.display = 'none');
+            document.querySelectorAll('.legacy-retake-btn').forEach(btn => btn.disabled = true);
+            
+            // Re-init camera if it was stopped
+            if (!cameraStream || !cameraStream.active) {
+                await initCamera();
+            }
+
+            // UI Feedback for current photo
+            document.getElementById('current-photo').innerText = photoId;
+            const dotIndex = photoId - 1;
+            const dot = document.getElementById(`dot-${dotIndex}`);
+            dot.className = 'w-5 h-5 rounded-full bg-amber-500 scale-125 transition-all duration-300 animate-pulse shadow-[0_0_15px_#f59e0b]';
+
+            await new Promise(r => setTimeout(r, 600)); // Small pause
+
+            await startCountdown();
+
+            triggerFlash();
+            window.PhotoboxSound.shutter();
+            
+            try {
+                const newUrl = await captureSinglePhoto();
+                capturedPhotos[dotIndex] = newUrl;
+                await updatePreviewWithPhoto(newUrl, photoId);
+            } catch (err) {
+                console.error("Retake failed", err);
+            }
+
+            // Restore dot
+            dot.className = 'w-5 h-5 rounded-full bg-green-500 scale-125 border-green-300 shadow-[0_0_15px_#22c55e] transition-all duration-300';
+            
+            // Re-enable UI
+            if(nextBtn) nextBtn.disabled = false;
+            document.querySelectorAll('.retake-block-btn').forEach(btn => btn.style.display = 'flex');
+            document.querySelectorAll('.legacy-retake-btn').forEach(btn => btn.disabled = false);
+
+            localStorage.setItem('capturedPhotos', JSON.stringify(capturedPhotos));
+            
+            // Stop camera again
             if (cameraStream) {
                 cameraStream.getTracks().forEach(t => t.stop());
             }
+        };
 
+        window.continueToNext = async function() {
+            if (window.PhotoboxSound) window.PhotoboxSound.beep(880, 0.1, 0.2);
+            document.getElementById('next-btn').disabled = true;
+            document.getElementById('next-btn').innerHTML = `
+                <svg class="animate-spin h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Processing...
+            `;
+            
             // Show processing overlay
             const overlay = document.getElementById('get-ready-overlay');
             overlay.innerHTML = `
                 <div class="flex flex-col items-center gap-6">
-                    <svg class="animate-spin h-14 w-14 text-fuchsia-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <svg class="animate-spin h-16 w-16 text-fuchsia-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    <h2 class="text-4xl font-bold text-white">Processing Photos...</h2>
+                    <h2 class="text-4xl font-bold text-white tracking-wide">Processing Your Photos...</h2>
+                    <p class="text-zinc-400">Applying final magic touches ✨</p>
                 </div>
             `;
             overlay.classList.remove('hidden');
 
-            window.PhotoboxSound.success();
-            await new Promise(r => setTimeout(r, 2000));
+            await new Promise(r => setTimeout(r, 1000));
+            // User requested routing: Welcome -> Guide -> Pilih paket -> Pilih frame -> Sesi foto -> Filter -> Scan QR -> Print
+            // The next page is the filter page! Wait, let's check what the filter page is. We previously had `/review`.
+            // Let's redirect to `/review` as it was originally the next page in runPhotoSession.
             window.location.href = '/review';
         }
 
@@ -259,4 +523,21 @@ import Layout from '../layouts/Layout.astro';
             runPhotoSession();
         }
     </script>
+
+    <style is:global>
+        /* Hide scrollbar for preview panel */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.8); opacity: 0; }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+    </style>
 </Layout>

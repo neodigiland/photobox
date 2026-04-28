@@ -210,7 +210,7 @@
     <div class="cover">
         <h1 style="color:white; border:none; margin:0; font-size:42px;">📸 Photobox Studio</h1>
         <p class="subtitle">Dokumentasi Sistem Lengkap</p>
-        <p class="version">v3.1 • April 2026 • Self-Service Photo Booth Kiosk</p>
+        <p class="version">v4.0 • April 2026 • Self-Service Photo Booth Kiosk</p>
     </div>
 
     <!-- TOC -->
@@ -219,7 +219,7 @@
         <ol class="toc">
             <li><a href="#desc">Deskripsi Aplikasi</a></li>
             <li><a href="#arch">Arsitektur Sistem</a></li>
-            <li><a href="#flow">User Flow</a></li>
+            <li><a href="#flow">User Flow Terkini</a></li>
             <li><a href="#pages">Detail Setiap Halaman (9 halaman)</a></li>
             <li><a href="#api">Backend API Reference</a></li>
             <li><a href="#frame">Frame Data Model</a></li>
@@ -234,7 +234,7 @@
     <!-- 1. DESKRIPSI -->
     <h1 id="desc">1. Deskripsi Aplikasi</h1>
     <p><strong>Photobox Studio</strong> adalah aplikasi kiosk self-service untuk photo booth portabel. Aplikasi ini berjalan secara lokal di sebuah <strong>Windows Mini PC</strong> yang terpasang di dalam unit photobox fisik. Tidak membutuhkan hosting cloud — semua berjalan di <code>localhost</code>.</p>
-    <p>Pengguna (tamu di event/cafe/venue) berinteraksi langsung dengan layar sentuh di photobox. Mereka memilih paket, memilih frame, membayar via QRIS, berfoto, dan menerima hasil cetak + file digital (download via QR).</p>
+    <p>Pengguna (tamu di event/cafe/venue) berinteraksi langsung dengan layar sentuh di photobox. Mereka memilih paket, memilih frame, membayar via QRIS, berfoto, memilih filter, mendapatkan scan QR file digital, dan terakhir mengambil cetakan dari meja operator.</p>
 
     <!-- 2. ARSITEKTUR -->
     <h1 id="arch" class="page-break">2. Arsitektur Sistem</h1>
@@ -247,7 +247,7 @@
             <tr><td>Browser</td><td>Google Chrome (Kiosk Mode)</td><td>—</td></tr>
             <tr><td>Sound</td><td>Web Audio API (synthesized)</td><td>—</td></tr>
             <tr><td>Rendering</td><td>HTML5 Canvas (CanvasRenderingContext2D)</td><td>—</td></tr>
-            <tr><td>Camera</td><td>WebRTC <code>getUserMedia</code></td><td>—</td></tr>
+            <tr><td>Camera</td><td>WebRTC <code>getUserMedia</code> & DSLR Trigger</td><td>—</td></tr>
         </tbody>
     </table>
 
@@ -263,10 +263,10 @@
 │  │  ├─ QR Generator  │   │  └─ Web Audio          │  │
 │  │  ├─ Gallery Store │   └────────────────────────┘  │
 │  │  └─ State Manager │                               │
-│  └──────────────────┘   ┌──────┐  ┌──────┐          │
-│          │               │ 🎥   │  │ 🖨️   │          │
-│          │               │Camera│  │Printer│          │
-│          │               └──────┘  └──────┘          │
+│  └──────────────────┘   ┌──────┐                    │
+│          │               │ 🎥   │                    │
+│          │               │Camera│                    │
+│          │               └──────┘                    │
 │          │                                            │
 │  ┌───────┴──────────────────┐                        │
 │  │ Chrome Kiosk Mode        │                        │
@@ -282,7 +282,7 @@
     </div>
 
     <!-- 3. FLOW -->
-    <h1 id="flow">3. User Flow (Alur Pengguna)</h1>
+    <h1 id="flow">3. User Flow Terkini (Alur Pengguna)</h1>
 
     <div class="flow">
         <span class="flow-step">🏠 Welcome</span>
@@ -295,15 +295,15 @@
         <span class="flow-arrow">→</span>
         <span class="flow-step">📷 Camera</span>
         <span class="flow-arrow">→</span>
+        <span class="flow-step">🎨 Filter Color</span>
+        <span class="flow-arrow">→</span>
         <span class="flow-step">👁️ Review</span>
         <span class="flow-arrow">→</span>
-        <span class="flow-step">🖨️ Printing</span>
-        <span class="flow-arrow">→</span>
-        <span class="flow-step">🎉 Finish + QR Download</span>
+        <span class="flow-step">🎉 QR Scan & Finish</span>
     </div>
 
     <div class="alert alert-info">
-        <strong>💡 Admin Dashboard</strong> (<code>/admin</code>) tersedia terpisah untuk operator — monitoring stats, kelola frame, simulasi payment.
+        <strong>💡 Alur Cetak (Print Flow)</strong> Sistem sekarang menerapkan bypass cetak box. Setelah men-scan QR Soft File, pelanggan akan diinstruksikan keluar box untuk mengambil cetakan kertas di meja operator / kasir.
     </div>
 
     <!-- 4. DETAIL HALAMAN -->
@@ -378,18 +378,16 @@
      │                              │                        │
      │── redirect ke /camera ──────►│                        │</code></pre>
 
-    <div class="alert alert-warning"><strong>⚠️ Mock:</strong> Saat ini payment di-mock. Gunakan <code>POST /api/simulate-payment-success</code> untuk simulasi. Di production, ganti dengan webhook dari Midtrans/Xendit.</div>
-
     <!-- PAGE 5 -->
     <h2>4.5 — 📷 Camera (<code>/camera</code>)</h2>
     <p>File: <code>src/pages/camera.astro</code></p>
     <table>
         <thead><tr><th>Item</th><th>Detail</th></tr></thead>
         <tbody>
-            <tr><td>Camera</td><td><code>navigator.mediaDevices.getUserMedia</code> (WebRTC)</td></tr>
-            <tr><td>Mirror</td><td>Selfie mode (<code>scaleX(-1)</code>)</td></tr>
+            <tr><td>Camera</td><td>Kamera DSLR Hardware via API (15 Detik Timeout). Fallback ke WebRTC Webcam.</td></tr>
+            <tr><td>Mirror</td><td>Selfie mode (<code>scaleX(-1)</code>) pada Live Preview.</td></tr>
             <tr><td>Capture</td><td>HTML5 Canvas capture → JPEG 90% quality</td></tr>
-            <tr><td>Fallback</td><td>Mock mode jika tidak ada kamera</td></tr>
+            <tr><td>UI Layout</td><td>Panel Kanan bisa di-scroll (Tahan resolusi layar kecil) dengan Tombol Lanjut melayang statis di bawah bingkai.</td></tr>
         </tbody>
     </table>
     <h3>Alur Sesi Foto</h3>
@@ -398,78 +396,55 @@
 3. Loop per foto (3x atau 4x):
    a. Countdown 3-2-1 (dengan sound beep)
    b. Flash putih + shutter sound
-   c. Canvas capture → push ke array
-   d. Update dot indicator ✅
+   c. API Capture trigger DSLR (Timeout 15s)
+   d. Push Base64 hasil foto ke array localStorage
    e. "Captured!" badge animation
    f. Delay 2.5 detik antar foto
-4. Semua foto selesai → simpan ke localStorage
-5. Stop camera stream
-6. "Processing..." overlay → redirect ke /review</code></pre>
+4. Tombol "Lanjut" muncul di bawah bingkai.
+5. Tombol "Retake" per-foto tersedia jika ingin ulang spesifik gambar.
+6. Lanjut → redirect ke /filter</code></pre>
 
     <!-- PAGE 6 -->
-    <h2>4.6 — 👁️ Review (<code>/review</code>)</h2>
+    <h2>4.6 — 🎨 Filter Color (<code>/filter</code>) <span class="badge badge-green">NEW</span></h2>
+    <p>File: <code>src/pages/filter.astro</code></p>
+    <p>Halaman interaktif di mana pengguna dapat menerapkan efek pewarnaan sebelum foto dicetak.</p>
+    <table>
+        <thead><tr><th>Filter Name</th><th>CSS Eq</th></tr></thead>
+        <tbody>
+            <tr><td>Original</td><td><code>none</code></td></tr>
+            <tr><td>B & W</td><td><code>grayscale(100%) contrast(110%)</code></td></tr>
+            <tr><td>Vintage Sepia</td><td><code>sepia(80%) contrast(110%) brightness(90%)</code></td></tr>
+            <tr><td>Cool Tone</td><td><code>hue-rotate(180deg) saturate(150%) brightness(110%)</code></td></tr>
+            <tr><td>Warm Sun</td><td><code>sepia(30%) saturate(140%) hue-rotate(-10deg)</code></td></tr>
+        </tbody>
+    </table>
+    <p>Saat klik Lanjut, foto akan di-render menggunakan Canvas 2D untuk mematenkan efek filter, lalu disimpan ke <code>filteredPhotos</code> dan lanjut ke <code>/review</code>.</p>
+
+    <!-- PAGE 7 -->
+    <h2>4.7 — 👁️ Review (<code>/review</code>)</h2>
     <p>File: <code>src/pages/review.astro</code></p>
-    <p>Menampilkan <strong>WYSIWYG print preview</strong> — canvas render strip/grid lengkap dengan frame, dekorasi, dan footer. Persis seperti yang akan dicetak.</p>
+    <p>Menampilkan <strong>WYSIWYG print preview</strong> — canvas render strip/grid lengkap dengan frame, filter, dan dekorasi.</p>
 
     <h3>Tombol Aksi</h3>
     <table>
         <thead><tr><th>Tombol</th><th>Aksi</th></tr></thead>
         <tbody>
-            <tr><td><strong>Print This! 🖨️</strong></td><td>Upload foto ke gallery API → simpan QR → <code>/printing</code></td></tr>
-            <tr><td><strong>Retake Photos</strong></td><td>Hapus <code>capturedPhotos</code> → kembali ke <code>/camera</code></td></tr>
-        </tbody>
-    </table>
-
-    <h3>Upload Gallery (saat klik Print)</h3>
-    <pre><code>1. Disable button + show spinner "Uploading photos..."
-2. Get full-res strip dari canvas (toDataURL PNG)
-3. POST /api/gallery { photos[], strip, frameId, packageType }
-4. Backend simpan ke disk (galleries/G-xxx/)
-5. Backend return { galleryId, downloadUrl, qrDataUrl }
-6. Simpan QR ke localStorage untuk finish page
-7. Navigate ke /printing</code></pre>
-
-    <!-- PAGE 7 -->
-    <h2 class="page-break">4.7 — 🖨️ Printing (<code>/printing</code>)</h2>
-    <p>File: <code>src/pages/printing.astro</code></p>
-    <table>
-        <thead><tr><th>Item</th><th>Detail</th></tr></thead>
-        <tbody>
-            <tr><td>API Call</td><td><code>POST /api/hardware/printer/trigger</code></td></tr>
-            <tr><td>Visual</td><td>Animasi kertas keluar dari printer, progress bar, LED status</td></tr>
-            <tr><td>Error</td><td>Retry max 3x + skip option</td></tr>
-            <tr><td>Navigasi</td><td>Sukses → <code>/finish</code> (delay 2 detik)</td></tr>
+            <tr><td><strong>Cetak & Dapatkan QR 🖨️</strong></td><td>Upload foto ke gallery API → simpan QR → <code>/finish</code></td></tr>
+            <tr><td><strong>Foto Ulang Semua</strong></td><td>Hapus <code>capturedPhotos</code> & <code>filteredPhotos</code> → kembali ke <code>/camera</code></td></tr>
         </tbody>
     </table>
 
     <!-- PAGE 8 -->
-    <h2>4.8 — 🎉 Finish (<code>/finish</code>)</h2>
+    <h2 class="page-break">4.8 — 🎉 QR Scan & Finish (<code>/finish</code>)</h2>
     <p>File: <code>src/pages/finish.astro</code></p>
+    <p>Halaman ini menampilkan Soft File dan instruksi akhir ke pelanggan.</p>
     <table>
         <thead><tr><th>Item</th><th>Detail</th></tr></thead>
         <tbody>
-            <tr><td>QR Code</td><td>Menampilkan QR scannable untuk download foto digital</td></tr>
-            <tr><td>Download</td><td>Client scan QR → buka halaman mobile-friendly → download foto mentah + strip</td></tr>
-            <tr><td>Social</td><td>Icon Instagram, X, Facebook</td></tr>
-            <tr><td>Countdown</td><td>Auto-redirect ke <code>/</code> dalam 20 detik</td></tr>
-            <tr><td>Cleanup</td><td>Hapus semua session data dari localStorage</td></tr>
-        </tbody>
-    </table>
-    <p><strong>Client mendapat:</strong> 📷 Foto mentah (JPG individual) + 🖼️ Photo strip (dengan frame, dekorasi, branding)</p>
-
-    <!-- PAGE 9 -->
-    <h2>4.9 — 📊 Admin Dashboard (<code>/admin</code>)</h2>
-    <p>File: <code>src/pages/admin.astro</code></p>
-    <table>
-        <thead><tr><th>Section</th><th>Isi</th></tr></thead>
-        <tbody>
-            <tr><td>Stats Cards (5)</td><td>Total sessions, revenue, basic/premium count, active pending, total frames</td></tr>
-            <tr><td>Quick Actions</td><td>Simulate payment (paste TX ID, klik "Simulate Pay")</td></tr>
-            <tr><td>Transaction Table</td><td>ID, package, amount, status badge (PENDING/PAID/EXPIRED), timestamp</td></tr>
-            <tr><td>System Status</td><td>Backend/Frontend/WS status, Camera/Printer/Payment mode, uptime, version</td></tr>
-            <tr><td>Revenue Chart</td><td>Canvas bar chart (daily revenue, last 7 days)</td></tr>
-            <tr><td>Frame Management</td><td>Canvas preview semua frame, delete custom frames</td></tr>
-            <tr><td>Add Custom Frame</td><td>Modal: name, colors, border, radius, filter, decorations + <strong>live preview</strong></td></tr>
+            <tr><td>QR Code</td><td>Menampilkan QR scannable untuk download foto digital (Soft File).</td></tr>
+            <tr><td>Instruction</td><td>Pelanggan diinstruksikan untuk keluar photobox dan mengambil foto fisik di meja kasir/operator.</td></tr>
+            <tr><td>Countdown</td><td>Auto-redirect ke <code>/</code> dalam 60 detik agar punya waktu scan.</td></tr>
+            <tr><td>Cleanup</td><td>Hapus semua session data dari localStorage pada saat keluar.</td></tr>
         </tbody>
     </table>
 
@@ -486,24 +461,11 @@
         </tbody>
     </table>
 
-    <h2>Hardware API (Mock)</h2>
+    <h2>Hardware API</h2>
     <table>
         <thead><tr><th>Method</th><th>Endpoint</th><th>Response</th></tr></thead>
         <tbody>
-            <tr><td><code>POST</code></td><td><code>/api/hardware/camera/trigger</code></td><td><code>{ success }</code> (500ms delay)</td></tr>
-            <tr><td><code>POST</code></td><td><code>/api/hardware/printer/trigger</code></td><td><code>{ success }</code> (3s delay)</td></tr>
-        </tbody>
-    </table>
-
-    <h2>Frames API</h2>
-    <table>
-        <thead><tr><th>Method</th><th>Endpoint</th><th>Body</th><th>Response</th></tr></thead>
-        <tbody>
-            <tr><td><code>GET</code></td><td><code>/api/frames</code></td><td>—</td><td><code>Frame[]</code></td></tr>
-            <tr><td><code>GET</code></td><td><code>/api/frames/:id</code></td><td>—</td><td><code>Frame</code></td></tr>
-            <tr><td><code>POST</code></td><td><code>/api/admin/frames</code></td><td>Frame data</td><td><code>Frame</code> (201)</td></tr>
-            <tr><td><code>PUT</code></td><td><code>/api/admin/frames/:id</code></td><td>Frame data</td><td><code>Frame</code></td></tr>
-            <tr><td><code>DELETE</code></td><td><code>/api/admin/frames/:id</code></td><td>—</td><td><code>{ success }</code></td></tr>
+            <tr><td><code>POST</code></td><td><code>/api/hardware/camera/trigger</code></td><td>Mengambil gambar dari DSLR hardware/trigger (bisa delayed sampai 15s)</td></tr>
         </tbody>
     </table>
 
@@ -513,23 +475,6 @@
         <tbody>
             <tr><td><code>POST</code></td><td><code>/api/gallery</code></td><td><code>{ photos[], strip, frameId, packageType }</code></td><td><code>{ galleryId, downloadUrl, qrDataUrl }</code></td></tr>
             <tr><td><code>GET</code></td><td><code>/gallery/:id</code></td><td>—</td><td>HTML download page (mobile-friendly)</td></tr>
-        </tbody>
-    </table>
-
-    <h2>WebSocket</h2>
-    <table>
-        <thead><tr><th>URL</th><th>Events</th><th>Payload</th></tr></thead>
-        <tbody>
-            <tr><td><code>ws://localhost:3000/ws?txId=TX-xxx</code></td><td><code>PAYMENT_SUCCESS</code></td><td><code>{ type, transactionId }</code></td></tr>
-            <tr><td></td><td><code>PAYMENT_EXPIRED</code></td><td><code>{ type, transactionId }</code></td></tr>
-        </tbody>
-    </table>
-
-    <h2>Admin Stats</h2>
-    <table>
-        <thead><tr><th>Method</th><th>Endpoint</th><th>Response Fields</th></tr></thead>
-        <tbody>
-            <tr><td><code>GET</code></td><td><code>/api/admin/stats</code></td><td><code>totalSessions, totalRevenue, packageCounts, dailyHistory, activePending, recentTransactions, totalFrames, customFrames</code></td></tr>
         </tbody>
     </table>
 
@@ -550,75 +495,33 @@
   "decorations": "film-sprockets",
   "isDefault": true
 }</code></pre>
-    <table>
-        <thead><tr><th>Property</th><th>Type</th><th>Pilihan</th></tr></thead>
-        <tbody>
-            <tr><td><code>filter</code></td><td>string</td><td><code>none</code>, <code>sepia</code>, <code>grayscale</code>, <code>high-contrast</code></td></tr>
-            <tr><td><code>decorations</code></td><td>string</td><td><code>none</code>, <code>film-sprockets</code>, <code>neon-border</code>, <code>flowers</code></td></tr>
-            <tr><td><code>isDefault</code></td><td>boolean</td><td>Default frames tidak bisa dihapus lewat admin</td></tr>
-        </tbody>
-    </table>
 
     <!-- 7. RENDERER -->
     <h1 id="renderer">7. Canvas Strip Renderer</h1>
     <p>File: <code>public/js/strip-renderer.js</code></p>
-    <p>Engine berbasis Canvas yang dipakai di 3 halaman: <code>/select-frame</code> (preview), <code>/review</code> (WYSIWYG), <code>/admin</code> (frame management).</p>
-
-    <table>
-        <thead><tr><th>Package</th><th>Layout</th><th>Canvas Size</th><th>Photo Size</th></tr></thead>
-        <tbody>
-            <tr><td>Basic</td><td>Strip (vertikal 1 kolom)</td><td>360 × ~830px</td><td>316 × 240px</td></tr>
-            <tr><td>Premium</td><td>Grid (2 kolom × 2 baris)</td><td>540 × ~600px</td><td>~255 × 190px</td></tr>
-        </tbody>
-    </table>
-
-    <h3>Render Pipeline (6 Langkah)</h3>
-    <pre><code>1. Draw background     → rounded rect + subtle texture pattern
-2. Draw decorations L1 → film sprockets (if applicable)
-3. Load images          → async, parallel Promise.all
-4. Draw photos          → cover-fit with aspect ratio + border + radius + filter
-5. Draw decorations L2  → neon border glow, flower emojis
-6. Draw footer          → branding text, date, accent color line</code></pre>
+    <p>Engine berbasis Canvas yang dipakai di berbagai halaman untuk merender hasil HD (resolusi cetak 1200x1800 atau 1800x1200).</p>
 
     <!-- 8. FILE STRUCTURE -->
     <h1 id="structure" class="page-break">8. File Structure</h1>
     <pre class="tree"><code>Photobox Sys/
-├── start-kiosk.bat              <span class="comment">← One-click launcher</span>
-│
 ├── photobox-backend/
-│   ├── package.json
 │   ├── server.js                <span class="comment">← Express + WebSocket + Gallery API</span>
-│   ├── utils/
-│   │   └── state.js             <span class="comment">← Transaction store + Frame CRUD + Stats</span>
 │   └── galleries/               <span class="comment">← Uploaded photo galleries (auto-created)</span>
-│       └── G-{timestamp}/
-│           ├── photo-1.jpg
-│           ├── photo-2.jpg
-│           ├── photo-3.jpg
-│           ├── strip.png
-│           └── meta.json
 │
 └── photobox-frontend/
-    ├── astro.config.mjs
-    ├── package.json
-    ├── public/
-    │   └── js/
-    │       └── strip-renderer.js <span class="comment">← Canvas rendering engine</span>
-    └── src/
-        ├── layouts/
-        │   └── Layout.astro      <span class="comment">← Base shell + Sound utility</span>
-        ├── pages/
-        │   ├── index.astro       <span class="comment">← [1] Welcome / Idle</span>
-        │   ├── select-package.astro <span class="comment">← [2] Package picker</span>
-        │   ├── select-frame.astro   <span class="comment">← [3] Frame picker + canvas</span>
-        │   ├── payment.astro     <span class="comment">← [4] QRIS + WebSocket + Timeout</span>
-        │   ├── camera.astro      <span class="comment">← [5] Live webcam + capture</span>
-        │   ├── review.astro      <span class="comment">← [6] Print preview (canvas)</span>
-        │   ├── printing.astro    <span class="comment">← [7] Print + error recovery</span>
-        │   ├── finish.astro      <span class="comment">← [8] Thank you + QR download</span>
-        │   └── admin.astro       <span class="comment">← [9] Admin dashboard</span>
-        └── styles/
-            └── global.css</code></pre>
+    ├── src/
+    │   ├── pages/
+    │   │   ├── index.astro       <span class="comment">← [1] Welcome / Idle</span>
+    │   │   ├── select-package.astro <span class="comment">← [2] Package picker</span>
+    │   │   ├── select-frame.astro   <span class="comment">← [3] Frame picker + canvas</span>
+    │   │   ├── payment.astro     <span class="comment">← [4] QRIS + WebSocket + Timeout</span>
+    │   │   ├── camera.astro      <span class="comment">← [5] Live webcam + DSLR capture</span>
+    │   │   ├── filter.astro      <span class="comment">← [6] Photo Color Filters</span>
+    │   │   ├── review.astro      <span class="comment">← [7] Print preview + Gallery Upload</span>
+    │   │   ├── finish.astro      <span class="comment">← [8] QR Code + Exit Operator Instructions</span>
+    │   │   └── admin.astro       <span class="comment">← Admin dashboard</span>
+    │   └── styles/
+    │       └── global.css</code></pre>
 
     <!-- 9. DATA FLOW -->
     <h1 id="data">9. Data Flow (localStorage)</h1>
@@ -627,16 +530,17 @@
     <table>
         <thead><tr><th>Key</th><th>Set di</th><th>Baca di</th><th>Tipe</th></tr></thead>
         <tbody>
-            <tr><td><code>selectedPackage</code></td><td>select-package</td><td>select-frame, payment, camera, review</td><td><code>"basic"</code> | <code>"premium"</code></td></tr>
-            <tr><td><code>selectedFrame</code></td><td>select-frame</td><td>camera, review</td><td><code>"clean-white"</code>, <code>"vintage-film"</code>, dll</td></tr>
-            <tr><td><code>capturedPhotos</code></td><td>camera</td><td>review</td><td>JSON array of data URL strings</td></tr>
+            <tr><td><code>selectedPackage</code></td><td>select-package</td><td>select-frame, payment, camera, filter, review</td><td><code>"basic"</code> | <code>"premium"</code></td></tr>
+            <tr><td><code>selectedFrame</code></td><td>select-frame</td><td>camera, filter, review</td><td><code>"clean-white"</code>, <code>"vintage-film"</code>, dll</td></tr>
+            <tr><td><code>capturedPhotos</code></td><td>camera</td><td>filter, review</td><td>JSON array of original base64</td></tr>
+            <tr><td><code>filteredPhotos</code></td><td>filter</td><td>review</td><td>JSON array of filtered base64</td></tr>
             <tr><td><code>galleryId</code></td><td>review (upload)</td><td>finish</td><td><code>"G-1234567890"</code></td></tr>
             <tr><td><code>galleryQR</code></td><td>review (upload)</td><td>finish</td><td><code>data:image/png;base64,...</code></td></tr>
             <tr><td><code>galleryURL</code></td><td>review (upload)</td><td>finish</td><td><code>http://192.168.x.x:3000/gallery/G-xxx</code></td></tr>
         </tbody>
     </table>
 
-    <div class="alert alert-info"><strong>Cleanup:</strong> Semua key dihapus di halaman <code>/finish</code> setelah QR ditampilkan. Session sepenuhnya fresh saat kembali ke <code>/</code>.</div>
+    <div class="alert alert-info"><strong>Cleanup:</strong> Semua key dihapus di halaman <code>/finish</code> pada saat menekan Selesai atau countdown berakhir.</div>
 
     <!-- 10. CARA MENJALANKAN -->
     <h1 id="run" class="page-break">10. Cara Menjalankan</h1>
@@ -652,15 +556,6 @@ cd photobox-frontend
 npm install
 npm run dev</code></pre>
 
-    <h2>Production (Kiosk Mode)</h2>
-    <p>Double-click <code>start-kiosk.bat</code> — otomatis:</p>
-    <ol style="margin-left: 24px; margin-bottom: 16px; color: #475569;">
-        <li>Start backend (<code>node server.js</code>)</li>
-        <li>Start frontend dev server (<code>npm run dev</code>)</li>
-        <li>Tunggu 8 detik (server warmup)</li>
-        <li>Launch Chrome kiosk mode (<code>--kiosk http://localhost:4321</code>)</li>
-    </ol>
-
     <h2>URL Akses</h2>
     <table>
         <thead><tr><th>URL</th><th>Fungsi</th></tr></thead>
@@ -668,7 +563,6 @@ npm run dev</code></pre>
             <tr><td><code>http://localhost:4321</code></td><td>Kiosk interface (untuk tamu)</td></tr>
             <tr><td><code>http://localhost:4321/admin</code></td><td>Admin dashboard (untuk operator)</td></tr>
             <tr><td><code>http://localhost:3000/api/admin/stats</code></td><td>Stats JSON (health check)</td></tr>
-            <tr><td><code>http://&lt;IP&gt;:3000/gallery/&lt;id&gt;</code></td><td>Client photo download page</td></tr>
         </tbody>
     </table>
 
@@ -678,10 +572,8 @@ npm run dev</code></pre>
         <thead><tr><th>Komponen</th><th>Status</th><th>Untuk Production</th></tr></thead>
         <tbody>
             <tr><td>Payment Gateway</td><td><span class="badge badge-yellow">🟡 Mock</span></td><td>Integrasi webhook QRIS asli (Midtrans/Xendit)</td></tr>
-            <tr><td>Camera</td><td><span class="badge badge-green">🟢 Real</span></td><td>Sudah pakai webcam asli via WebRTC</td></tr>
-            <tr><td>Printer</td><td><span class="badge badge-yellow">🟡 Mock</span></td><td>Integrasi driver printer (ESC/POS atau system print)</td></tr>
-            <tr><td>Auth Admin</td><td><span class="badge badge-red">🔴 Tidak ada</span></td><td>Tambahkan PIN/password untuk <code>/admin</code></td></tr>
-            <tr><td>Database</td><td><span class="badge badge-yellow">🟡 In-memory</span></td><td>SQLite atau LowDB untuk data persist</td></tr>
+            <tr><td>Camera</td><td><span class="badge badge-green">🟢 Real</span></td><td>Menggunakan trigger via Gphoto2 / Smart Shooter 15s</td></tr>
+            <tr><td>Printer</td><td><span class="badge badge-green">🟢 Bypass</span></td><td>Operator mencetak manual di meja kontrol</td></tr>
             <tr><td>Gallery Cleanup</td><td><span class="badge badge-red">🔴 Tidak ada</span></td><td>Auto-delete galleries setelah X hari</td></tr>
         </tbody>
     </table>
@@ -689,7 +581,7 @@ npm run dev</code></pre>
     <hr>
 
     <div style="text-align: center; padding: 32px 0; color: var(--muted);">
-        <p style="font-size: 16px; font-weight: 600;">📸 Photobox Studio v3.1</p>
+        <p style="font-size: 16px; font-weight: 600;">📸 Photobox Studio v4.0</p>
         <p>Documentation generated April 2026</p>
     </div>
 

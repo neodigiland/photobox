@@ -3,69 +3,11 @@
  * Tracks transactions, stats, frames, and admin data.
  */
 
+const fs = require('fs');
+const path = require('path');
+
 // ─── Default Frame Templates ─────────────────────────────────
-const defaultFrames = [
-    {
-        id: 'clean-white',
-        name: 'Clean White',
-        subtitle: 'Minimalist',
-        bgColor: '#ffffff',
-        photoBorder: '#e8e8e8',
-        photoBorderWidth: 2,
-        photoRadius: 4,
-        textColor: '#555555',
-        footerText: 'Photobox Studio',
-        accentColor: '#a855f7',
-        filter: 'none',
-        decorations: 'none',
-        isDefault: true
-    },
-    {
-        id: 'vintage-film',
-        name: 'Vintage Film',
-        subtitle: 'Retro Vibes',
-        bgColor: '#f5e6d3',
-        photoBorder: '#c9a87c',
-        photoBorderWidth: 3,
-        photoRadius: 2,
-        textColor: '#8b6914',
-        footerText: 'KODAK 400  •  Photobox Studio',
-        accentColor: '#d97706',
-        filter: 'sepia',
-        decorations: 'film-sprockets',
-        isDefault: true
-    },
-    {
-        id: 'neon-glow',
-        name: 'Neon Glow',
-        subtitle: 'Cyberpunk',
-        bgColor: '#0a0a0a',
-        photoBorder: '#06b6d4',
-        photoBorderWidth: 2,
-        photoRadius: 6,
-        textColor: '#06b6d4',
-        footerText: '✦ PHOTOBOX STUDIO ✦',
-        accentColor: '#d946ef',
-        filter: 'none',
-        decorations: 'neon-border',
-        isDefault: true
-    },
-    {
-        id: 'flower-garden',
-        name: 'Flower Garden',
-        subtitle: 'Cute & Soft',
-        bgColor: '#fff0f5',
-        photoBorder: '#f9a8d4',
-        photoBorderWidth: 3,
-        photoRadius: 10,
-        textColor: '#be185d',
-        footerText: '🌸 Photobox Studio 🌸',
-        accentColor: '#ec4899',
-        filter: 'none',
-        decorations: 'flowers',
-        isDefault: true
-    }
-];
+const defaultFrames = [];
 
 const state = {
     transactions: {},
@@ -77,6 +19,36 @@ const state = {
         dailyHistory: []
     }
 };
+
+// ─── Persistence ─────────────────────────────────────────────
+const FRAMES_FILE = path.join(__dirname, '..', 'frames.json');
+
+function loadPersistentFrames() {
+    try {
+        if (fs.existsSync(FRAMES_FILE)) {
+            const data = fs.readFileSync(FRAMES_FILE, 'utf-8');
+            const customFrames = JSON.parse(data);
+            if (Array.isArray(customFrames)) {
+                state.frames = [...defaultFrames, ...customFrames];
+                console.log(`[STATE] Loaded ${customFrames.length} custom frames from disk.`);
+            }
+        }
+    } catch (err) {
+        console.error('[STATE] Failed to load custom frames:', err.message);
+    }
+}
+
+function savePersistentFrames() {
+    try {
+        const customFrames = state.frames.filter(f => !f.isDefault);
+        fs.writeFileSync(FRAMES_FILE, JSON.stringify(customFrames, null, 2));
+    } catch (err) {
+        console.error('[STATE] Failed to save custom frames:', err.message);
+    }
+}
+
+// Initialize persistence
+loadPersistentFrames();
 
 // ─── Transaction Methods ─────────────────────────────────────
 
@@ -163,11 +135,15 @@ function addFrame(frameData) {
         accentColor: frameData.accentColor || '#a855f7',
         filter: frameData.filter || 'none',
         decorations: frameData.decorations || 'none',
+        layout: frameData.layout || null,  // New custom dynamic layout coordinates [{x,y,w,h}]
+        overlay: frameData.overlay || null, // New absolute URL for transparent PNG overlay
+        packageType: frameData.packageType || 'basic', // 'basic' = Strip, 'premium' = 4R
         isDefault: false,
         createdAt: Date.now()
     };
 
     state.frames.push(frame);
+    savePersistentFrames();
     return frame;
 }
 
@@ -182,6 +158,7 @@ function updateFrame(id, frameData) {
         id: state.frames[idx].id,
         isDefault: state.frames[idx].isDefault
     };
+    savePersistentFrames();
     return state.frames[idx];
 }
 
@@ -190,6 +167,7 @@ function deleteFrame(id) {
     if (idx === -1) return false;
     if (state.frames[idx].isDefault) return false; // Can't delete defaults
     state.frames.splice(idx, 1);
+    savePersistentFrames();
     return true;
 }
 

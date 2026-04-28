@@ -8,7 +8,7 @@ function startCleanupCron(galleriesDir) {
         console.log('[CRON] Starting daily gallery cleanup...');
         if (!fs.existsSync(galleriesDir)) return;
 
-        const maxAgeMs = 30 * 24 * 60 * 60 * 1000; // 30 days
+        const maxAgeMs = 7 * 24 * 60 * 60 * 1000; // 7 days
         const now = Date.now();
         let deletedCount = 0;
 

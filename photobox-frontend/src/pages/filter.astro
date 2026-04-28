@@ -1,0 +1,224 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Pilih Filter | Photobox" hideOverflow={true}>
+    <div class="h-screen w-full flex bg-zinc-950 overflow-hidden select-none">
+        <!-- LEFT PANEL: Preview -->
+        <div class="flex-1 relative flex flex-col items-center justify-center p-8 z-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]">
+            <div class="absolute inset-0 bg-gradient-to-br from-zinc-900/90 to-zinc-950/95 z-0"></div>
+            
+            <div class="relative z-10 w-full max-w-xl flex flex-col items-center">
+                <h1 class="text-4xl font-bold text-white mb-2">Pilih Filter Warna</h1>
+                <p class="text-zinc-400 mb-8 text-center text-lg">Sesuaikan nuansa foto untuk hasil yang lebih estetik.</p>
+                
+                <div id="preview-container" class="relative bg-zinc-900 border-4 border-zinc-800 rounded-3xl p-4 shadow-2xl flex items-center justify-center transition-all duration-500" style="width: 380px; height: 570px;">
+                    <svg class="animate-spin h-10 w-10 text-purple-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT PANEL: Filter Options -->
+        <div class="w-[420px] min-w-[380px] bg-zinc-950 border-l border-zinc-800 p-6 pb-4 flex flex-col relative z-20 shadow-[-20px_0_40px_rgba(0,0,0,0.5)]">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-white font-bold text-2xl">Koleksi Filter</h3>
+                <span class="text-xs font-bold font-mono bg-fuchsia-500/20 text-fuchsia-400 px-3 py-1.5 rounded-full border border-fuchsia-500/30">Langkah 5/7</span>
+            </div>
+
+            <!-- Scrollable Filter List -->
+            <div class="flex-1 overflow-y-auto no-scrollbar flex flex-col gap-4 w-full" id="filter-list">
+                <!-- Populated by JS -->
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="mt-6 flex flex-col gap-3 flex-shrink-0 min-h-[70px] w-full">
+                <button id="next-btn" onclick="applyFilterAndContinue()" class="w-full py-4 rounded-xl font-bold text-white bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:scale-[1.02] active:scale-95 transition-all shadow-[0_0_20px_rgba(168,85,247,0.4)] flex items-center justify-center gap-2 text-xl hidden">
+                    Lanjut Review
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden Loading Overlay -->
+    <div id="processing-overlay" class="fixed inset-0 bg-black/95 flex flex-col items-center justify-center z-[100] hidden backdrop-blur-md">
+        <svg class="animate-spin h-20 w-20 text-purple-500 mb-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <h2 class="text-4xl font-black text-white mb-3 tracking-wide">Menerapkan Filter...</h2>
+        <p class="text-zinc-400 text-lg">Memproses foto dalam resolusi tinggi.</p>
+    </div>
+
+    <script is:inline>
+        const BACKEND_URL = 'http://localhost:3000';
+        const selectedFrameId = localStorage.getItem('selectedFrame') || 'clean-white';
+        const originalPhotos = JSON.parse(localStorage.getItem('capturedPhotos') || '[]');
+        
+        let frameData = null;
+        let activeFilter = 'normal';
+
+        const filters = [
+            { id: 'normal', name: 'Original', css: 'none', bg: 'bg-zinc-800' },
+            { id: 'bw', name: 'B & W', css: 'grayscale(100%) contrast(110%)', bg: 'bg-zinc-700' },
+            { id: 'sepia', name: 'Vintage Sepia', css: 'sepia(80%) contrast(110%) brightness(90%)', bg: 'bg-amber-900/40' },
+            { id: 'cold', name: 'Cool Tone', css: 'hue-rotate(180deg) saturate(150%) brightness(110%)', bg: 'bg-blue-900/40' },
+            { id: 'warm', name: 'Warm Sun', css: 'sepia(30%) saturate(140%) hue-rotate(-10deg)', bg: 'bg-orange-900/40' },
+            { id: 'fade', name: 'Cinematic Fade', css: 'contrast(85%) brightness(115%) saturate(80%)', bg: 'bg-zinc-800/80' }
+        ];
+
+        // Redirect if no photos
+        if (originalPhotos.length === 0) {
+            window.location.href = '/camera';
+        }
+
+        async function initFilterPage() {
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/frames/${selectedFrameId}`);
+                frameData = await res.json();
+                renderPreview();
+                renderFilterList();
+                document.getElementById('next-btn').classList.remove('hidden');
+            } catch (err) {
+                console.error('Failed to init preview:', err);
+            }
+        }
+
+        function renderPreview() {
+            const container = document.getElementById('preview-container');
+            
+            if (frameData.overlay) {
+                container.innerHTML = `
+                    <div class="relative w-full h-full overflow-hidden rounded-xl bg-zinc-800">
+                        <!-- User Photos (Behind) -->
+                        <div class="absolute inset-0 z-0">
+                            ${frameData.layout.map((b, i) => {
+                                const photoIndex = (b.id ? b.id - 1 : i);
+                                if (photoIndex >= originalPhotos.length) return '';
+                                return \`
+                                <div class="absolute overflow-hidden" style="top: \${b.y}%; left: \${b.x}%; width: \${b.w}%; height: \${b.h}%;">
+                                    <div class="w-full h-full" style="transform: rotate(\${b.rotation || 0}deg);">
+                                        <img src="\${originalPhotos[photoIndex]}" class="w-full h-full object-cover shadow-inner filter-preview-img transition-all duration-300" style="filter: \${getFilterCss(activeFilter)}; image-rendering: -webkit-optimize-contrast;" />
+                                    </div>
+                                </div>
+                                \`;
+                            }).join('')}
+                        </div>
+                        <!-- Transparent Frame (Front) -->
+                        <img src="${frameData.overlay}" class="w-full h-full object-cover absolute inset-0 z-10 pointer-events-none" />
+                    </div>
+                `;
+            } else {
+                container.innerHTML = `<div class="text-white text-center">Legacy frame format detected. Filters apply to photo but preview is limited.</div>`;
+            }
+        }
+
+        function getFilterCss(filterId) {
+            const f = filters.find(x => x.id === filterId);
+            return f ? f.css : 'none';
+        }
+
+        function renderFilterList() {
+            const list = document.getElementById('filter-list');
+            list.innerHTML = filters.map(f => {
+                const isActive = activeFilter === f.id;
+                // Just use the first photo as thumbnail
+                const thumbSrc = originalPhotos.length > 0 ? originalPhotos[0] : '';
+                
+                return \`
+                <div onclick="selectFilter('\${f.id}')" class="flex items-center gap-4 p-3 rounded-2xl cursor-pointer transition-all duration-200 border-2 \${isActive ? 'border-purple-500 bg-purple-500/10 scale-[1.02]' : 'border-zinc-800 bg-zinc-900/50 hover:bg-zinc-800'}">
+                    <div class="w-20 h-20 rounded-xl overflow-hidden flex-shrink-0 bg-zinc-800 border \${isActive ? 'border-purple-400' : 'border-zinc-700'}">
+                        <img src="\${thumbSrc}" class="w-full h-full object-cover" style="filter: \${f.css}" />
+                    </div>
+                    <div class="flex-1">
+                        <h4 class="text-white font-bold text-xl">\${f.name}</h4>
+                    </div>
+                    <div class="\${isActive ? 'opacity-100' : 'opacity-0'} transition-opacity">
+                        <div class="w-6 h-6 rounded-full bg-purple-500 flex items-center justify-center shadow-[0_0_10px_#a855f7]">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-white" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                \`;
+            }).join('');
+        }
+
+        window.selectFilter = function(id) {
+            if (window.PhotoboxSound) window.PhotoboxSound.beep(523, 0.05, 0.2);
+            activeFilter = id;
+            
+            // Update preview images
+            document.querySelectorAll('.filter-preview-img').forEach(img => {
+                img.style.filter = getFilterCss(id);
+            });
+            
+            // Update list UI
+            renderFilterList();
+        }
+
+        // Apply filter to all base64 photos using Canvas
+        async function applyFilterAndContinue() {
+            if (window.PhotoboxSound) window.PhotoboxSound.success();
+            
+            if (activeFilter === 'normal') {
+                // No processing needed
+                localStorage.setItem('filteredPhotos', JSON.stringify(originalPhotos));
+                window.location.href = '/review';
+                return;
+            }
+
+            document.getElementById('processing-overlay').classList.remove('hidden');
+
+            try {
+                const filterCss = getFilterCss(activeFilter);
+                const filteredPhotos = [];
+
+                for (let i = 0; i < originalPhotos.length; i++) {
+                    const src = originalPhotos[i];
+                    // Create an image
+                    const img = new Image();
+                    img.crossOrigin = "Anonymous";
+                    await new Promise((resolve, reject) => {
+                        img.onload = resolve;
+                        img.onerror = reject;
+                        img.src = src;
+                    });
+
+                    // Draw to canvas with filter
+                    const canvas = document.createElement('canvas');
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    const ctx = canvas.getContext('2d');
+                    
+                    // Apply CSS filter to context
+                    ctx.filter = filterCss;
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    
+                    // Save as JPEG (reduces size slightly to avoid quota errors)
+                    filteredPhotos.push(canvas.toDataURL('image/jpeg', 0.95));
+                }
+
+                // Save to localStorage
+                localStorage.setItem('filteredPhotos', JSON.stringify(filteredPhotos));
+                
+                // Redirect
+                window.location.href = '/review';
+
+            } catch (err) {
+                console.error("Filter processing failed:", err);
+                alert("Gagal memproses filter. Menggunakan foto original.");
+                localStorage.setItem('filteredPhotos', JSON.stringify(originalPhotos));
+                window.location.href = '/review';
+            }
+        }
+
+        initFilterPage();
+    </script>
+</Layout>

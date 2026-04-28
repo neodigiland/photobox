@@ -33,7 +33,9 @@ window.StripRenderer = {
     async render(canvas, photos, frame, packageType) {
         const isGrid = packageType === 'premium';
         const ctx = canvas.getContext('2d');
-        const dpr = window.devicePixelRatio || 1;
+        // Force a high-resolution multiplier (4x) so the generated photo strip is Ultra-HD (e.g., 1440px+ wide)
+        // instead of relying on the standard 1x screen Dpi which causes blurriness when downloaded.
+        const dpr = 4; 
 
         let W, H;
         if (isGrid) {
@@ -288,6 +290,7 @@ window.StripRenderer = {
             if (!src || src.startsWith('mock')) return Promise.resolve(null);
             return new Promise(resolve => {
                 const img = new Image();
+                img.crossOrigin = 'anonymous';
                 img.onload = () => resolve(img);
                 img.onerror = () => resolve(null);
                 img.src = src;

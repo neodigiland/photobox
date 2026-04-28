@@ -1,0 +1,417 @@
+[
+  {
+    "id": "koran-4r",
+    "name": "Koran 4r",
+    "subtitle": "Dynamic Frame",
+    "bgColor": "#ffffff",
+    "photoBorder": "#e0e0e0",
+    "photoBorderWidth": 2,
+    "photoRadius": 4,
+    "textColor": "#333333",
+    "footerText": "Photobox Studio",
+    "accentColor": "#a855f7",
+    "filter": "none",
+    "decorations": "none",
+    "layout": [
+      {
+        "id": 1,
+        "x": 37.573191647143815,
+        "y": 33.31733249766384,
+        "w": 61.381648770498984,
+        "h": 31.93509987464958
+      },
+      {
+        "id": 2,
+        "x": 1.3935461098095878,
+        "y": 67.8110379348329,
+        "w": 32.46556699195004,
+        "h": 20.36537800062298
+      },
+      {
+        "id": 3,
+        "x": 67.20732313945508,
+        "y": 67.58557774992214,
+        "w": 31.07202088214045,
+        "h": 20.82816687558404
+      }
+    ],
+    "overlay": "http://localhost:3000/frames/koran-4r-1776750639974.png",
+    "isDefault": false,
+    "createdAt": 1776750639977,
+    "imageBase64": "http://localhost:3000/frames/koran-4r-1776750639974.png",
+    "packageType": "premium"
+  },
+  {
+    "id": "koran-2",
+    "name": "Koran 2",
+    "subtitle": "Dynamic Frame",
+    "bgColor": "#ffffff",
+    "photoBorder": "#e0e0e0",
+    "photoBorderWidth": 2,
+    "photoRadius": 4,
+    "textColor": "#333333",
+    "footerText": "Photobox Studio",
+    "accentColor": "#a855f7",
+    "filter": "none",
+    "decorations": "none",
+    "layout": [
+      {
+        "id": 1,
+        "x": 2.407429033309252,
+        "y": 32.16036031026118,
+        "w": 47.446187672403106,
+        "h": 20.36537800062298
+      },
+      {
+        "id": 2,
+        "x": 0.6654963960472695,
+        "y": 51.61342731119565,
+        "w": 48.1429607273079,
+        "h": 17.58864475085659
+      },
+      {
+        "id": 3,
+        "x": 0.665496396047267,
+        "y": 71.0564943121301,
+        "w": 49.18812030966509,
+        "h": 18.051433625817655
+      },
+      {
+        "id": 4,
+        "x": 50.41283718447804,
+        "y": 33.8336270604948,
+        "w": 48.69028386676299,
+        "h": 17.363983563142444
+      },
+      {
+        "id": 5,
+        "x": 51.10961023938284,
+        "y": 51.882393183976305,
+        "w": 48.3418973393106,
+        "h": 18.983744625506166
+      },
+      {
+        "id": 6,
+        "x": 50.761223711930434,
+        "y": 70.85673705737993,
+        "w": 47.9935108118582,
+        "h": 19.67792793794776
+      }
+    ],
+    "overlay": "http://localhost:3000/frames/koran-2-1776770514452.png",
+    "isDefault": false,
+    "createdAt": 1776770514454,
+    "imageBase64": "http://localhost:3000/frames/koran-2-1776770514452.png",
+    "packageType": "premium"
+  },
+  {
+    "id": "oren",
+    "name": "oren",
+    "subtitle": "Dynamic Frame",
+    "bgColor": "#ffffff",
+    "photoBorder": "#e0e0e0",
+    "photoBorderWidth": 2,
+    "photoRadius": 4,
+    "textColor": "#333333",
+    "footerText": "Photobox Studio",
+    "accentColor": "#a855f7",
+    "filter": "none",
+    "decorations": "none",
+    "layout": [
+      {
+        "id": 1,
+        "x": 5.891294307833221,
+        "y": 7.401155499844257,
+        "w": 42.22038976061715,
+        "h": 26.150238937636278
+      },
+      {
+        "id": 2,
+        "x": 5.542907780380824,
+        "y": 33.10187231275308,
+        "w": 43.96232239787914,
+        "h": 27.77
+      },
+      {
+        "id": 3,
+        "x": 5.891294307833221,
+        "y": 59.94956131306457,
+        "w": 42.22038976061715,
+        "h": 25.45605562519468
+      },
+      {
+        "id": 4,
+        "x": 51.80638329428763,
+        "y": 7.223266750233616,
+        "w": 43.812872482429434,
+        "h": 26.156972187402662
+      },
+      {
+        "id": 5,
+        "x": 52.50315634919242,
+        "y": 33.37083818553373,
+        "w": 43.464485954977036,
+        "h": 27.08254993732479
+      },
+      {
+        "id": 6,
+        "x": 51.10961023938284,
+        "y": 60.44398737075598,
+        "w": 44.85803206478663,
+        "h": 27.08254993732479
+      }
+    ],
+    "overlay": "http://localhost:3000/frames/oren-1776771178889.png",
+    "isDefault": false,
+    "createdAt": 1776771178890
+  },
+  {
+    "id": "cokelat",
+    "name": "cokelat",
+    "subtitle": "Dynamic Frame",
+    "bgColor": "#ffffff",
+    "photoBorder": "#e0e0e0",
+    "photoBorderWidth": 2,
+    "photoRadius": 4,
+    "textColor": "#333333",
+    "footerText": "Photobox Studio",
+    "accentColor": "#a855f7",
+    "filter": "none",
+    "decorations": "none",
+    "layout": [
+      {
+        "id": 1,
+        "x": 8.33,
+        "y": 3.1654347358827097,
+        "w": 36.99480309072855,
+        "h": 25.385434735882704,
+        "rotation": 0
+      },
+      {
+        "id": 2,
+        "x": 8.694783185654325,
+        "y": 31.677866037429915,
+        "w": 36.99480309072855,
+        "h": 25.385434735882704,
+        "rotation": 0
+      },
+      {
+        "id": 3,
+        "x": 8.694783185654325,
+        "y": 60.5094278672117,
+        "w": 36.99480309072855,
+        "h": 25.385434735882704,
+        "rotation": 0
+      },
+      {
+        "id": 4,
+        "x": 56.33519690927143,
+        "y": 2.6295255472738313,
+        "w": 36.99480309072855,
+        "h": 25.385434735882704,
+        "rotation": 0
+      },
+      {
+        "id": 5,
+        "x": 56.33519690927143,
+        "y": 31.677866037429915,
+        "w": 36.99480309072855,
+        "h": 25.385434735882704,
+        "rotation": 0
+      },
+      {
+        "id": 6,
+        "x": 56.66150111285786,
+        "y": 60.726206527585994,
+        "w": 36.99480309072855,
+        "h": 25.385434735882704,
+        "rotation": 0
+      }
+    ],
+    "overlay": "http://localhost:3000/frames/cokelat-1776781134973.png",
+    "isDefault": false,
+    "createdAt": 1776781134975,
+    "imageBase64": "http://localhost:3000/frames/cokelat-1776781134973.png",
+    "packageType": "basic"
+  },
+  {
+    "id": "blue-and-pink",
+    "name": "Blue and Pink",
+    "subtitle": "Dynamic Frame",
+    "bgColor": "#ffffff",
+    "photoBorder": "#e0e0e0",
+    "photoBorderWidth": 2,
+    "photoRadius": 4,
+    "textColor": "#333333",
+    "footerText": "Photobox Studio",
+    "accentColor": "#a855f7",
+    "filter": "none",
+    "decorations": "none",
+    "layout": [
+      {
+        "id": 1,
+        "x": 2.4565243354444655,
+        "y": 2.731877415134112,
+        "w": 44.49979977321619,
+        "h": 19.532410905776633,
+        "rotation": 0
+      },
+      {
+        "id": 2,
+        "x": 2.1686991139259546,
+        "y": 27.12551416956963,
+        "w": 44.49979977321619,
+        "h": 19.532410905776633,
+        "rotation": 0
+      },
+      {
+        "id": 3,
+        "x": 2.4950033175123734,
+        "y": 51.40472413149113,
+        "w": 44.49979977321619,
+        "h": 19.532410905776633,
+        "rotation": 0
+      },
+      {
+        "id": 4,
+        "x": 53.39845907699367,
+        "y": 2.6295255472738313,
+        "w": 44.49979977321619,
+        "h": 19.532410905776633,
+        "rotation": 0
+      },
+      {
+        "id": 5,
+        "x": 53.39845907699367,
+        "y": 26.90873550919533,
+        "w": 44.49979977321619,
+        "h": 19.532410905776633,
+        "rotation": 0
+      },
+      {
+        "id": 6,
+        "x": 53.07215487340725,
+        "y": 51.40472413149113,
+        "w": 44.49979977321619,
+        "h": 19.532410905776633,
+        "rotation": 0
+      }
+    ],
+    "overlay": "http://localhost:3000/frames/blue-and-pink-1777014574460.png",
+    "packageType": "basic",
+    "isDefault": false,
+    "createdAt": 1777014574461
+  },
+  {
+    "id": "pink-music",
+    "name": "Pink Music",
+    "subtitle": "Dynamic Frame",
+    "bgColor": "#ffffff",
+    "photoBorder": "#e0e0e0",
+    "photoBorderWidth": 2,
+    "photoRadius": 4,
+    "textColor": "#333333",
+    "footerText": "Photobox Studio",
+    "accentColor": "#a855f7",
+    "filter": "none",
+    "decorations": "none",
+    "layout": [
+      {
+        "id": 1,
+        "x": 2.130220131858047,
+        "y": 18.556719622457944,
+        "w": 45.80501658756186,
+        "h": 21.049861528396725,
+        "rotation": 0
+      },
+      {
+        "id": 2,
+        "x": 2.4950033175123734,
+        "y": 39.915455131653275,
+        "w": 45.80501658756186,
+        "h": 21.049861528396725,
+        "rotation": 0
+      },
+      {
+        "id": 3,
+        "x": 2.1686991139259546,
+        "y": 60.29264920683739,
+        "w": 45.80501658756186,
+        "h": 21.049861528396725,
+        "rotation": 0
+      },
+      {
+        "id": 4,
+        "x": 52.093242262648,
+        "y": 18.671146414971968,
+        "w": 45.80501658756186,
+        "h": 21.049861528396725,
+        "rotation": 0
+      },
+      {
+        "id": 5,
+        "x": 52.093242262648,
+        "y": 39.26511915053038,
+        "w": 45.80501658756186,
+        "h": 21.049861528396725,
+        "rotation": 0
+      },
+      {
+        "id": 6,
+        "x": 52.093242262648,
+        "y": 60.07587054646309,
+        "w": 45.80501658756186,
+        "h": 21.049861528396725,
+        "rotation": 0
+      }
+    ],
+    "overlay": "http://localhost:3000/frames/pink-music-1777029716663.png",
+    "packageType": "basic",
+    "isDefault": false,
+    "createdAt": 1777029716665
+  },
+  {
+    "id": "red-news",
+    "name": "red news",
+    "subtitle": "Dynamic Frame",
+    "bgColor": "#ffffff",
+    "photoBorder": "#e0e0e0",
+    "photoBorderWidth": 2,
+    "photoRadius": 4,
+    "textColor": "#333333",
+    "footerText": "Photobox Studio",
+    "accentColor": "#a855f7",
+    "filter": "none",
+    "decorations": "none",
+    "layout": [
+      {
+        "id": 1,
+        "x": 2.7828285390308833,
+        "y": 15.955375697966357,
+        "w": 66.36218141350622,
+        "h": 35.574031773474765,
+        "rotation": 0
+      },
+      {
+        "id": 2,
+        "x": 72.46801881327758,
+        "y": 44.99792507534626,
+        "w": 23.942634947271813,
+        "h": 8.25992056631308,
+        "rotation": 0
+      },
+      {
+        "id": 3,
+        "x": 2.7828285390308842,
+        "y": 66.22644267925139,
+        "w": 67.66739822785192,
+        "h": 28.420335981122896,
+        "rotation": 0
+      }
+    ],
+    "overlay": "http://localhost:3000/frames/red-news-1777030815647.png",
+    "packageType": "premium",
+    "isDefault": false,
+    "createdAt": 1777030815648
+  }
+]

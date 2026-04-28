@@ -1,6 +1,5 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import { supabase } from '../utils/supabase';
 
 // Explicit opt-in for SSR
 export const prerender = false;
@@ -13,8 +12,9 @@ let error = null;
 
 try {
     const getBaseUrl = (filename) => {
-        const { data } = supabase.storage.from('photobox-galleries').getPublicUrl(`${galleryId}/${filename}`);
-        return data.publicUrl;
+        // Cloudflare R2 Public Development URL
+        const R2_PUBLIC_URL = 'https://pub-aa94d8b56e1e432aa439e66b27076fee.r2.dev';
+        return `${R2_PUBLIC_URL}/${galleryId}/${filename}`;
     };
 
     const checkExists = async (url) => {

@@ -17,17 +17,17 @@ import Layout from '../layouts/Layout.astro';
             </svg>
         </div>
 
-        <h1 class="text-5xl font-bold mb-3 z-10">Thank You!</h1>
-        <p class="text-xl text-zinc-400 max-w-lg mb-8 z-10">
-            Please take your printed photos from the slot below 📸
+        <h1 class="text-5xl font-bold mb-3 z-10">Selesai!</h1>
+        <p class="text-xl text-zinc-300 max-w-lg mb-8 z-10 font-medium bg-zinc-900/50 p-4 rounded-xl border border-zinc-800">
+            Silakan keluar dari photobox dan <span class="text-white font-bold text-green-400">ambil hasil cetak Anda di meja operator</span> 📸
         </p>
 
         <!-- Download QR Section -->
-        <div class="bg-zinc-900/80 backdrop-blur-sm border border-zinc-800 rounded-2xl p-6 max-w-sm w-full z-10 mb-6" id="download-section">
-            <h3 class="text-lg font-bold mb-1 text-white flex items-center justify-center gap-2">
-                📲 Download Your Photos
+        <div class="bg-zinc-900/80 backdrop-blur-sm border border-zinc-800 rounded-2xl p-6 max-w-sm w-full z-10 mb-6 shadow-[0_0_40px_rgba(0,0,0,0.5)]" id="download-section">
+            <h3 class="text-xl font-bold mb-1 text-white flex items-center justify-center gap-2">
+                📲 Soft File Foto Anda
             </h3>
-            <p class="text-sm text-zinc-400 mb-4">Scan with your phone to save all photos</p>
+            <p class="text-sm text-zinc-400 mb-4">Scan QR code di bawah menggunakan HP Anda</p>
 
             <!-- QR Code -->
             <div class="bg-white rounded-xl p-3 inline-block mb-4 shadow-lg" id="qr-container">
@@ -40,25 +40,25 @@ import Layout from '../layouts/Layout.astro';
                 <img id="qr-image" src="" alt="Download QR Code" class="hidden w-48 h-48 object-contain" />
             </div>
 
-            <!-- Download URL text -->
-            <p class="text-xs text-zinc-500 font-mono break-all px-4 mb-3" id="download-url">—</p>
+            <!-- Download URL text (Copyable for testing) -->
+            <p class="text-xs text-zinc-500 font-mono break-all px-4 mb-3 select-all cursor-text" style="user-select: text !important; -webkit-user-select: text !important;" id="download-url">—</p>
 
             <!-- What's included -->
             <div class="flex justify-center gap-4 text-xs text-zinc-400">
-                <span class="flex items-center gap-1">📷 Raw photos</span>
+                <span class="flex items-center gap-1">📷 Semua Foto Satuan</span>
                 <span class="text-zinc-700">•</span>
-                <span class="flex items-center gap-1">🖼️ Photo strip</span>
+                <span class="flex items-center gap-1">🖼️ Hasil Frame</span>
             </div>
         </div>
 
         <!-- No gallery fallback -->
         <div class="hidden bg-zinc-900/80 border border-zinc-800 rounded-2xl p-6 max-w-sm w-full z-10 mb-6" id="no-gallery-section">
-            <p class="text-zinc-400 text-sm">Digital download not available for this session</p>
+            <p class="text-zinc-400 text-sm">Maaf, Soft File digital tidak tersedia untuk sesi ini.</p>
         </div>
 
-        <!-- Social Share -->
-        <div class="bg-zinc-900/80 backdrop-blur-sm border border-zinc-800 rounded-2xl p-5 max-w-sm w-full z-10 mb-8">
-            <p class="text-base text-zinc-300 mb-3 font-medium">Share your experience!</p>
+        <button onclick="exitSession()" class="px-10 py-4 bg-zinc-800 text-white font-bold rounded-full hover:bg-zinc-700 transition-colors border border-zinc-700 z-10 mb-8 text-lg">
+            Akhiri Sesi
+        </button>
             <div class="flex gap-3 justify-center">
                 <div class="w-11 h-11 bg-gradient-to-br from-pink-500 via-red-500 to-yellow-400 rounded-xl flex items-center justify-center text-white shadow-lg hover:scale-110 transition-transform cursor-pointer">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
@@ -80,24 +80,37 @@ import Layout from '../layouts/Layout.astro';
         </div>
 
         <p class="text-lg text-zinc-500 z-10">
-            Returning to home screen in <span id="countdown" class="font-bold text-white text-2xl mx-1">20</span> seconds...
+            Halaman ini akan otomatis tertutup dalam <span id="countdown" class="font-bold text-white text-2xl mx-1">60</span> detik...
         </p>
     </div>
 
     <script is:inline>
-        // ─── COUNTDOWN (always runs first, no dependencies) ─────
-        let secondsLeft = 20;
+        // ─── COUNTDOWN & EXIT ─────
+        let secondsLeft = 60;
         const countdownEl = document.getElementById('countdown');
         const countdownInterval = setInterval(function() {
             secondsLeft--;
             if (countdownEl) countdownEl.innerText = secondsLeft;
             if (secondsLeft <= 0) {
-                clearInterval(countdownInterval);
-                window.location.href = '/';
+                exitSession();
             }
         }, 1000);
 
-        // ─── GALLERY QR (wrapped in try-catch) ──────────────────
+        window.exitSession = function() {
+            clearInterval(countdownInterval);
+            try {
+                localStorage.removeItem('selectedPackage');
+                localStorage.removeItem('selectedFrame');
+                localStorage.removeItem('capturedPhotos');
+                localStorage.removeItem('filteredPhotos');
+                localStorage.removeItem('galleryId');
+                localStorage.removeItem('galleryQR');
+                localStorage.removeItem('galleryURL');
+            } catch(e) { console.warn('Cleanup error:', e); }
+            window.location.href = '/';
+        }
+
+        // ─── GALLERY QR ──────────────────
         try {
             const galleryQR = localStorage.getItem('galleryQR');
             const galleryURL = localStorage.getItem('galleryURL');
@@ -114,15 +127,7 @@ import Layout from '../layouts/Layout.astro';
             }
         } catch(e) { console.warn('Gallery QR error:', e); }
 
-        // ─── CLEANUP (wrapped in try-catch) ─────────────────────
-        try {
-            localStorage.removeItem('selectedPackage');
-            localStorage.removeItem('selectedFrame');
-            localStorage.removeItem('capturedPhotos');
-            localStorage.removeItem('galleryId');
-            localStorage.removeItem('galleryQR');
-            localStorage.removeItem('galleryURL');
-        } catch(e) { console.warn('Cleanup error:', e); }
+
 
         // ─── SOUND (wrapped in try-catch) ────────────────────────
         try {

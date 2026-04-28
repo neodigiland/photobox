@@ -2,181 +2,249 @@
 import Layout from '../layouts/Layout.astro';
 ---
 
-<Layout title="Review Photos" hideOverflow={false}>
+<Layout title="Review Print" hideOverflow={false}>
     <div class="min-h-screen w-full flex flex-col items-center justify-start pt-6 pb-12 relative select-none">
-
-        <div class="text-center mb-6 z-10 mt-4">
-            <h1 class="text-4xl font-bold mb-2">Review Your Print</h1>
-            <p class="text-lg text-zinc-400">This is exactly what will be printed</p>
+        
+        <!-- Header -->
+        <div class="text-center mb-8 z-10 mt-4">
+            <h1 class="text-4xl font-bold mb-2">Review Foto Anda</h1>
+            <p class="text-lg text-zinc-400">Pastikan semuanya sudah pas sebelum dicetak!</p>
         </div>
 
-        <!-- Print Preview Container -->
-        <div class="flex items-start justify-center gap-8 w-full max-w-5xl z-10 px-6 flex-wrap" id="preview-area">
+        <div class="flex flex-col md:flex-row items-center justify-center w-full max-w-5xl z-10 px-6 gap-8">
             
-            <!-- Left: Final rendered strip -->
-            <div class="flex flex-col items-center flex-shrink-0">
-                <div class="bg-zinc-900 rounded-2xl p-5 border border-zinc-800 shadow-[0_0_40px_rgba(0,0,0,0.5)]">
-                    <div id="loading-preview" class="flex flex-col items-center gap-4 py-16 px-12 text-zinc-400">
-                        <svg class="animate-spin h-10 w-10" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        <p class="font-medium">Rendering preview...</p>
-                    </div>
-                    <canvas id="print-canvas" class="hidden rounded-lg shadow-xl"></canvas>
-                </div>
-                <div class="mt-2 flex items-center gap-2">
-                    <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                    <span class="text-xs text-zinc-500">Print-ready preview</span>
-                </div>
+            <!-- LEFT: Big Visual Preview -->
+            <div id="preview-container" class="relative bg-zinc-900 border-4 border-zinc-800 rounded-3xl p-4 shadow-2xl flex items-center justify-center" style="width: 380px; height: 570px;">
+                <svg class="animate-spin h-10 w-10 text-purple-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
             </div>
 
-            <!-- Right: Info + Thumbnails + Actions -->
-            <div class="flex flex-col gap-4 w-72 flex-shrink-0">
-                <div class="bg-zinc-900 rounded-xl border border-zinc-800 p-5">
-                    <h3 class="font-bold text-lg mb-3 text-zinc-300">Session Info</h3>
-                    <div class="space-y-2 text-sm">
-                        <div class="flex justify-between">
-                            <span class="text-zinc-500">Package</span>
-                            <span class="font-medium" id="info-package">—</span>
+            <!-- RIGHT: Actions -->
+            <div class="flex flex-col gap-4 w-full md:w-80">
+                <div class="bg-zinc-900 rounded-2xl border border-zinc-800 p-6">
+                    <h3 class="font-bold text-xl mb-3 text-zinc-300">Info Sesi</h3>
+                    <div class="space-y-3 text-sm">
+                        <div class="flex justify-between items-center border-b border-zinc-800 pb-2">
+                            <span class="text-zinc-500">Paket</span>
+                            <span class="font-medium text-white px-2 py-1 bg-zinc-800 rounded" id="info-package">—</span>
                         </div>
-                        <div class="flex justify-between">
+                        <div class="flex justify-between items-center border-b border-zinc-800 pb-2">
                             <span class="text-zinc-500">Frame</span>
-                            <span class="font-medium" id="info-frame">—</span>
+                            <span class="font-medium text-white truncate max-w-[120px]" id="info-frame">—</span>
                         </div>
-                        <div class="flex justify-between">
-                            <span class="text-zinc-500">Photos</span>
-                            <span class="font-medium" id="info-photos">—</span>
+                        <div class="flex justify-between items-center">
+                            <span class="text-zinc-500">Status</span>
+                            <span class="font-bold text-green-400">Siap Cetak</span>
                         </div>
                     </div>
                 </div>
 
-                <div class="bg-zinc-900 rounded-xl border border-zinc-800 p-5">
-                    <h3 class="font-bold text-sm mb-3 text-zinc-300">Your Shots</h3>
-                    <div class="grid grid-cols-3 gap-2" id="thumb-grid"></div>
-                </div>
-
-                <button id="print-btn" class="w-full px-6 py-4 bg-gradient-to-r from-purple-600 to-fuchsia-600 text-white font-bold text-lg rounded-xl transition-all duration-200 flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-95 shadow-[0_0_30px_rgba(168,85,247,0.3)]">
+                <button id="print-btn" class="w-full px-6 py-5 bg-gradient-to-r from-purple-600 to-fuchsia-600 text-white font-bold text-xl rounded-2xl transition-all duration-300 flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-95 shadow-[0_0_30px_rgba(168,85,247,0.3)]">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                       <path stroke-linecap="round" stroke-linejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0l.229 2.523a1.125 1.125 0 01-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0021 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 00-1.913-.247M6.34 18H5.25A2.25 2.25 0 013 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 011.913-.247m10.5 0a48.536 48.536 0 00-10.5 0m10.5 0V3.375c0-.621-.504-1.125-1.125-1.125h-8.25c-.621 0-1.125.504-1.125 1.125v3.659M18 10.5h.008v.008H18V10.5zm-3 0h.008v.008H15V10.5z" />
                     </svg>
-                    Print This! 🖨️
+                    Cetak & Dapatkan QR
                 </button>
-                <button id="retake-btn" class="w-full px-6 py-3 bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-sm rounded-xl transition-all duration-200 border border-zinc-700 flex items-center justify-center gap-2">
+
+                <button id="retake-btn" class="w-full px-6 py-4 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold text-sm rounded-2xl transition-all duration-200 border border-zinc-700 flex items-center justify-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                       <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182" />
                     </svg>
-                    Retake Photos
+                    Foto Ulang Semua
                 </button>
             </div>
         </div>
+
+        <!-- Hidden Loading Overlay -->
+        <div id="rendering-overlay" class="fixed inset-0 bg-black/95 flex flex-col items-center justify-center z-[100] hidden backdrop-blur-md">
+            <svg class="animate-spin h-20 w-20 text-green-500 mb-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <h2 class="text-4xl font-black text-white mb-3 tracking-wide">Menyiapkan Foto...</h2>
+            <p class="text-zinc-400 text-lg">Menggabungkan foto resolusi tinggi dan menautkan ke Cloud.</p>
+        </div>
+
+        <!-- Hidden Canvas for Local Render -->
+        <canvas id="renderCanvas" width="1200" height="1800" class="hidden"></canvas>
     </div>
 
+    <!-- Need StripRenderer for legacy templates -->
     <script src="/js/strip-renderer.js" is:inline></script>
+    
     <script is:inline>
         const BACKEND_URL = 'http://localhost:3000';
         const selectedPackage = localStorage.getItem('selectedPackage') || 'basic';
         const selectedFrameId = localStorage.getItem('selectedFrame') || 'clean-white';
-        const photos = JSON.parse(localStorage.getItem('capturedPhotos') || '[]');
+        // Ambil hasil filter, kalau kosong (misal di-bypass) ambil capturedPhotos asli
+        const photos = JSON.parse(localStorage.getItem('filteredPhotos') || localStorage.getItem('capturedPhotos') || '[]');
+        
+        let frameData = null;
 
-        document.getElementById('info-package').innerText = selectedPackage === 'premium' ? 'Premium Grid' : 'Classic Strip';
-        document.getElementById('info-photos').innerText = `${photos.length} photos`;
+        // Redirect if no photos
+        if (photos.length === 0) {
+            window.location.href = '/camera';
+        }
 
-        const thumbGrid = document.getElementById('thumb-grid');
-        photos.forEach((photo, i) => {
-            const div = document.createElement('div');
-            div.className = 'aspect-[4/3] rounded-lg overflow-hidden bg-zinc-800';
-            if (photo && photo.startsWith('data:')) {
-                div.innerHTML = `<img src="${photo}" class="w-full h-full object-cover" alt="Photo ${i+1}" />`;
-            } else {
-                div.innerHTML = `<div class="w-full h-full flex items-center justify-center text-zinc-500 text-xs font-bold">${i+1}</div>`;
-            }
-            thumbGrid.appendChild(div);
-        });
+        document.getElementById('info-package').innerText = selectedPackage === 'premium' ? 'Premium (4 Panel)' : 'Classic (3 Panel)';
 
-        async function renderPreview() {
+        async function initPreview() {
             try {
                 const res = await fetch(`${BACKEND_URL}/api/frames/${selectedFrameId}`);
-                const frame = await res.json();
-                document.getElementById('info-frame').innerText = frame.name;
+                frameData = await res.json();
+                document.getElementById('info-frame').innerText = frameData.name;
 
-                const canvas = document.getElementById('print-canvas');
-                await StripRenderer.render(canvas, photos, frame, selectedPackage);
+                const container = document.getElementById('preview-container');
 
-                // Scale canvas to fit screen — max height ~500px
-                const originalW = parseInt(canvas.style.width);
-                const originalH = parseInt(canvas.style.height);
-                const maxH = 500;
-                if (originalH > maxH) {
-                    const scale = maxH / originalH;
-                    canvas.style.width = Math.round(originalW * scale) + 'px';
-                    canvas.style.height = Math.round(originalH * scale) + 'px';
+                if (frameData.overlay) {
+                    // ─── DYNAMIC CSS PREVIEW ───
+                    // It uses purely CSS absolute positioning. Much faster than Canvas live rendering.
+                    container.innerHTML = `
+                        <div class="relative w-full h-full overflow-hidden rounded-xl bg-zinc-800">
+                            <!-- User Photos (Behind) -->
+                            <div class="absolute inset-0 z-0">
+                                ${frameData.layout.map((b, i) => {
+                                    const photoIndex = (b.id ? b.id - 1 : i);
+                                    if (photoIndex >= photos.length) return '';
+                                    return `
+                                    <div class="absolute overflow-hidden" style="top: ${b.y}%; left: ${b.x}%; width: ${b.w}%; height: ${b.h}%;">
+                                        <div class="w-full h-full" style="transform: rotate(${b.rotation || 0}deg);">
+                                            <img src="${photos[photoIndex]}" class="w-full h-full object-cover shadow-inner" />
+                                        </div>
+                                    </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                            <!-- Transparent Frame (Front) -->
+                            <img src="${frameData.overlay}" class="w-full h-full object-cover absolute inset-0 z-10 pointer-events-none" />
+                        </div>
+                    `;
+                } else {
+                    // ─── LEGACY CANVAS PREVIEW ───
+                    container.innerHTML = `<canvas id="legacy-preview-canvas" class="w-full h-full object-contain rounded-xl"></canvas>`;
+                    const canvas = document.getElementById('legacy-preview-canvas');
+                    await StripRenderer.render(canvas, photos, frameData, selectedPackage);
                 }
 
-                document.getElementById('loading-preview').classList.add('hidden');
-                canvas.classList.remove('hidden');
             } catch (err) {
-                console.error('Failed to render preview:', err);
-                document.getElementById('loading-preview').innerHTML = `
-                    <p class="text-red-400">Failed to load frame data</p>
-                    <a href="/select-frame" class="text-purple-400 underline text-sm mt-2">Go back</a>
-                `;
+                console.error('Failed to init preview:', err);
             }
         }
 
-        document.getElementById('retake-btn').addEventListener('click', () => {
-            window.PhotoboxSound.beep(440, 0.1, 0.15);
-            localStorage.removeItem('capturedPhotos');
-            window.location.href = '/camera';
+        const loadImage = (src) => new Promise((resolve, reject) => {
+            const img = new Image();
+            img.crossOrigin = "Anonymous";
+            img.onload = () => resolve(img);
+            img.onerror = () => reject(new Error(`Failed to load image: ${src}`));
+            img.src = src;
         });
 
-        document.getElementById('print-btn').addEventListener('click', async () => {
-            const btn = document.getElementById('print-btn');
-            btn.disabled = true;
-            btn.innerHTML = `
-                <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Uploading photos...
-            `;
-            btn.classList.add('opacity-75');
-
-            window.PhotoboxSound.beep(880, 0.15, 0.25);
+        async function processAndPrint() {
+            if (window.PhotoboxSound) window.PhotoboxSound.beep(880, 0.15, 0.25);
+            document.getElementById('rendering-overlay').classList.remove('hidden');
 
             try {
-                // Get full-resolution strip from canvas (before scaling)
-                const canvas = document.getElementById('print-canvas');
-                const stripDataUrl = canvas.toDataURL('image/png', 1.0);
+                let finalData;
 
-                // Upload to gallery
+                if (frameData.overlay) {
+                    // ─── HIGH RES DYNAMIC CANVAS RENDER ───
+                    const canvas = document.getElementById('renderCanvas');
+                    const ctx = canvas.getContext('2d');
+                    ctx.clearRect(0, 0, canvas.width, canvas.height); // Reset 1200x1800
+
+                    // Draw photos into coordinates
+                    for (let i = 0; i < frameData.layout.length; i++) {
+                        const b = frameData.layout[i];
+                        const photoIndex = (b.id ? b.id - 1 : i);
+                        if (photoIndex >= photos.length) continue;
+
+                        const x = (b.x / 100) * canvas.width;
+                        const y = (b.y / 100) * canvas.height;
+                        const w = (b.w / 100) * canvas.width;
+                        const h = (b.h / 100) * canvas.height;
+
+                        try {
+                            const img = await loadImage(photos[photoIndex]);
+                            // Center Crop Math
+                            const scale = Math.max(w / img.width, h / img.height);
+                            const sW = w / scale;
+                            const sH = h / scale;
+                            const sX = (img.width - sW) / 2;
+                            const sY = (img.height - sH) / 2;
+                            
+                            ctx.save();
+                            ctx.translate(x + w/2, y + h/2);
+                            if (b.rotation) {
+                                ctx.rotate(b.rotation * Math.PI / 180);
+                            }
+                            ctx.drawImage(img, sX, sY, sW, sH, -w/2, -h/2, w, h);
+                            ctx.restore();
+                        } catch (e) {
+                            ctx.fillStyle = '#e4e4e7';
+                            ctx.fillRect(x, y, w, h);
+                        }
+                    }
+
+                    // Draw Frame
+                    try {
+                        const frameImg = await loadImage(frameData.overlay);
+                        ctx.drawImage(frameImg, 0, 0, canvas.width, canvas.height);
+                    } catch (e) {
+                        ctx.strokeStyle = '#ffffff';
+                        ctx.lineWidth = 20;
+                        ctx.strokeRect(10, 10, canvas.width-20, canvas.height-20);
+                    }
+
+                    finalData = canvas.toDataURL('image/jpeg', 1.0);
+                } else {
+                    // ─── HIGH RES LEGACY CANVAS RENDER ───
+                    const canvas = document.getElementById('renderCanvas');
+                    await StripRenderer.render(canvas, photos, frameData, selectedPackage);
+                    finalData = canvas.toDataURL('image/png', 1.0);
+                }
+
+                // POST to Print System
                 const res = await fetch(`${BACKEND_URL}/api/gallery`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         photos: photos,
-                        strip: stripDataUrl,
+                        strip: finalData,
                         frameId: selectedFrameId,
                         packageType: selectedPackage
                     })
                 });
-                const data = await res.json();
 
-                // Store gallery info for finish page
+                if (!res.ok) throw new Error('API returning non-200');
+
+                const data = await res.json();
+                
+                // Store output URLs for QR page
                 localStorage.setItem('galleryId', data.galleryId);
                 localStorage.setItem('galleryQR', data.qrDataUrl);
                 localStorage.setItem('galleryURL', data.downloadUrl);
-            } catch (err) {
-                console.warn('Gallery upload failed (photos still print):', err);
-            }
 
-            window.location.href = '/printing';
+                // Open QR/Finish Page Directly
+                window.location.href = '/finish';
+
+            } catch (err) {
+                console.error("Print processing error:", err);
+                alert("Failed to render photos securely. Please try again.");
+                document.getElementById('rendering-overlay').classList.add('hidden');
+            }
+        }
+
+        document.getElementById('print-btn').addEventListener('click', processAndPrint);
+        
+        document.getElementById('retake-btn').addEventListener('click', () => {
+            if (window.PhotoboxSound) window.PhotoboxSound.beep(440, 0.1, 0.15);
+            localStorage.removeItem('capturedPhotos');
+            localStorage.removeItem('filteredPhotos');
+            window.location.href = '/camera'; // Retake photos loop
         });
 
-        if (photos.length === 0) {
-            window.location.href = '/camera';
-        } else {
-            renderPreview();
-        }
+        initPreview();
     </script>
 </Layout>
