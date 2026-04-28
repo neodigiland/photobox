@@ -94,7 +94,14 @@ import Layout from '../layouts/Layout.astro';
             try {
                 const res = await fetch(`${BACKEND_URL}/api/frames/${selectedFrameId}`);
                 frameData = await res.json();
-                document.getElementById('info-frame').innerText = frameData.name;
+                
+                if (frameData.error) {
+                    console.warn('Frame API returned error:', frameData.error);
+                    // Fallback to a minimal frame object to prevent crashes
+                    frameData = { name: 'Default Frame', bgColor: '#ffffff', textColor: '#333333', photoBorder: '#e0e0e0' };
+                }
+
+                document.getElementById('info-frame').innerText = frameData.name || 'Custom Frame';
 
                 const container = document.getElementById('preview-container');
 

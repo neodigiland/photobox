@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/r2-assets/:path*",
+      "destination": "https://pub-aa94d8b56e1e432aa439e66b27076fee.r2.dev/:path*"
+    }
+  ]
+}

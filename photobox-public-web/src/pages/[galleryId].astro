@@ -12,34 +12,34 @@ let error = null;
 
 try {
     const getBaseUrl = (filename) => {
-        // Cloudflare R2 Public Development URL
-        const R2_PUBLIC_URL = 'https://pub-aa94d8b56e1e432aa439e66b27076fee.r2.dev';
-        return `${R2_PUBLIC_URL}/${galleryId}/${filename}`;
+        // Use Vercel Proxy to avoid ISP block on .r2.dev
+        const PROXY_URL = '/r2-assets';
+        return `${PROXY_URL}/${galleryId}/${filename}`;
     };
 
-    const checkExists = async (url) => {
+    // For SSR validation, we fetch directly from Cloudflare (Vercel can reach it)
+    const checkExists = async (filename) => {
+        const R2_URL = 'https://pub-aa94d8b56e1e432aa439e66b27076fee.r2.dev';
         try {
-            const res = await fetch(url, { method: 'HEAD' });
+            const res = await fetch(`${R2_URL}/${galleryId}/${filename}`, { method: 'HEAD' });
             return res.ok;
         } catch {
             return false;
         }
     };
 
-    // Prepare URLs to check
+    // Prepare URLs for checking
+    const [hasStripPng, hasStripJpg, hasGif, ...photosExist] = await Promise.all([
+        checkExists('strip.png'),
+        checkExists('strip.jpg'),
+        checkExists('animation.gif'),
+        ...Array.from({ length: 8 }, (_, i) => checkExists(`photo-${i + 1}.jpg`))
+    ]);
+
     const candidateStripPng = getBaseUrl('strip.png');
     const candidateStripJpg = getBaseUrl('strip.jpg');
     const candidateGif = getBaseUrl('animation.gif');
-    
-    // Check up to 8 photos concurrently
     const photoCandidates = Array.from({ length: 8 }, (_, i) => getBaseUrl(`photo-${i + 1}.jpg`));
-    
-    const [hasStripPng, hasStripJpg, hasGif, ...photosExist] = await Promise.all([
-        checkExists(candidateStripPng),
-        checkExists(candidateStripJpg),
-        checkExists(candidateGif),
-        ...photoCandidates.map(checkExists)
-    ]);
 
     const cacheBuster = `?t=${Date.now()}`;
 

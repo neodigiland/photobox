@@ -7,7 +7,25 @@ const fs = require('fs');
 const path = require('path');
 
 // ─── Default Frame Templates ─────────────────────────────────
-const defaultFrames = [];
+const defaultFrames = [
+  {
+    id: "clean-white",
+    name: "Clean White",
+    subtitle: "Classic Minimalist",
+    bgColor: "#ffffff",
+    photoBorder: "#e0e0e0",
+    photoBorderWidth: 2,
+    photoRadius: 4,
+    textColor: "#333333",
+    footerText: "Photobox Studio",
+    accentColor: "#a855f7",
+    filter: "none",
+    decorations: "none",
+    layout: null,
+    overlay: null,
+    isDefault: true
+  }
+];
 
 const state = {
     transactions: {},

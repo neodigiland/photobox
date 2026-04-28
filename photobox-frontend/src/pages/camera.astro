@@ -514,7 +514,7 @@ import Layout from '../layouts/Layout.astro';
             // User requested routing: Welcome -> Guide -> Pilih paket -> Pilih frame -> Sesi foto -> Filter -> Scan QR -> Print
             // The next page is the filter page! Wait, let's check what the filter page is. We previously had `/review`.
             // Let's redirect to `/review` as it was originally the next page in runPhotoSession.
-            window.location.href = '/review';
+            window.location.href = '/filter';
         }
 
         if (document.readyState === 'loading') {
